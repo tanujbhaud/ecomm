@@ -54,7 +54,7 @@ export default function Header({ isLoading, error, user }) {
           >
             {!user && (
               <>
-                <a href="/api/auth/login">Login</a>
+                <Link href="/api/auth/login">Login</Link>
               </>
             )}
             <span style={{ marginRight: "5px" }}>
@@ -74,9 +74,7 @@ export default function Header({ isLoading, error, user }) {
             />
             {user && (
               <>
-                <a style={{ margin: 0 }} href="/api/auth/logout">
-                  Logout
-                </a>
+                <Link href="/api/auth/logout">Logout</Link>
               </>
             )}
           </div>
