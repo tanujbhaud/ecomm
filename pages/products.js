@@ -7,7 +7,7 @@ export default function Products() {
 
   useEffect(() => {
     axios
-      .post("https://awstest.sperentes.com/get-product-list", {
+      .post("https://awstest.sperentes.com/ws/get-product-list", {
         api_key: process.env.api_key,
       })
       .then(function (response) {
