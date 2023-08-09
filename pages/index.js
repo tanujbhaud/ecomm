@@ -7,7 +7,7 @@ export default function Home() {
   return (
     <>
       <Header isLoading={isLoading} error={error} user={user} />
-      why is header not
+      header should now
     </>
   );
 }
