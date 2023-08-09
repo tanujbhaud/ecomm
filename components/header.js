@@ -57,21 +57,25 @@ export default function Header({ isLoading, error, user }) {
                 <Link href="/api/auth/login">Login</Link>
               </>
             )}
-            <span style={{ marginRight: "5px" }}>
-              {" "}
-              Welcome&nbsp;
-              {user.name}
-            </span>
-            <img
-              style={{
-                borderRadius: "50%",
-                width: "50px",
-                paddingTop: "10px",
-                paddingBottom: "10px",
-              }}
-              src={user.picture}
-              alt={user.name}
-            />
+            {user && (
+              <>
+                <span style={{ marginRight: "5px" }}>
+                  {" "}
+                  Welcome&nbsp;
+                  {user.name}
+                </span>
+                <img
+                  style={{
+                    borderRadius: "50%",
+                    width: "50px",
+                    paddingTop: "10px",
+                    paddingBottom: "10px",
+                  }}
+                  src={user.picture}
+                  alt={user.name}
+                />
+              </>
+            )}
             {user && (
               <>
                 <Link href="/api/auth/logout">Logout</Link>
