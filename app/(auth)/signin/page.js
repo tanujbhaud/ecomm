@@ -1,18 +1,33 @@
 "use client";
 import { auth } from "../../config/firebase";
 import { useState } from "react";
-
+import toast from "react-hot-toast";
+import { useAuthState } from "react-firebase-hooks/auth";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 export default function Signin() {
   const router = useRouter();
-  const [form, setform] = useState({});
-  const signin = async () => {
-    try {
-      await signInWithEmailAndPassword(auth, form.email, form.password);
+  const [user] = useAuthState(auth);
+  useEffect(() => {
+    if (user) {
       router.push("/");
-    } catch (err) {
-      console.error(err);
+    }
+  }, [user]);
+  const [form, setform] = useState({ email: "", password: "" });
+
+  const signin = async () => {
+    if (form.email !== "" && form.password !== "") {
+      try {
+        await signInWithEmailAndPassword(auth, form.email, form.password);
+        toast.success("Successfully signed in");
+        router.push("/");
+      } catch (err) {
+        console.error(err);
+        toast.error(err.message);
+      }
+    } else {
+      toast.error("Please fill the complete details");
     }
   };
 

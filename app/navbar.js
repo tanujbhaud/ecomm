@@ -8,13 +8,9 @@ import { IoIosClose } from "react-icons/io";
 import { Dialog, Popover, Tab, Transition } from "@headlessui/react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { FaBars, FaSearch } from "react-icons/fa";
-// import {
-//   Bars3Icon,
-//   MagnifyingGlassIcon,
-//   ShoppingBagIcon,
-//   XMarkIcon,
-// } from "@heroicons/react/24/outline";
+
 import { useRouter } from "next/navigation";
+import SearchBar from "./searchbar";
 const navigation = {
   categories: [
     {
@@ -139,18 +135,16 @@ const navigation = {
       ],
     },
   ],
-  pages: [
-    { name: "Company", href: "#" },
-    { name: "Stores", href: "#" },
-  ],
+  pages: [{ name: "Discover", href: "/discover" }],
 };
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
-export default function Navbar() {
+export default function Navbar({ ocart, setocart }) {
   const [user] = useAuthState(auth);
+  const [username, setusername] = useState("");
   const Router = useRouter();
   const logout = async () => {
     try {
@@ -160,7 +154,17 @@ export default function Navbar() {
       console.error(err);
     }
   };
-  console.log(user);
+  useEffect(() => {
+    if (user) {
+      if (user.displayName === null) {
+        const u1 = user.email.substring(0, user.email.indexOf("@"));
+        const uname = u1.charAt(0).toUpperCase() + u1.slice(1);
+        setusername(uname);
+      } else {
+        setusername(user.displayName);
+      }
+    }
+  }, [user]);
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -313,10 +317,10 @@ export default function Navbar() {
                       <>
                         <div className="flow-root">
                           <a
-                            href="/signin"
-                            className="-m-2 block p-2 font-medium text-gray-900"
+                            href="/dashboard"
+                            className="-m-2 block p-2 font-medium text-gray-900 cursor-pointer"
                           >
-                            {user?.email}
+                            {username}
                           </a>
                         </div>
                         <div className="flow-root">
@@ -384,7 +388,7 @@ export default function Navbar() {
                 </div>
 
                 {/* Flyout menus */}
-                <Popover.Group className="hidden lg:ml-8 lg:block lg:self-stretch">
+                <Popover.Group className="hidden z-10 lg:ml-8 lg:block lg:self-stretch">
                   <div className="flex h-full space-x-8">
                     {navigation.categories.map((category) => (
                       <Popover key={category.name} className="flex">
@@ -511,10 +515,10 @@ export default function Navbar() {
                   {user !== null ? (
                     <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:space-x-6">
                       <a
-                        href="/signin"
-                        className="text-sm font-medium text-gray-700 hover:text-gray-800"
+                        href="/dashboard"
+                        className="text-sm font-medium text-gray-700 hover:text-gray-800 cursor-pointer"
                       >
-                        {user?.email}
+                        {username}
                       </a>
                       <span
                         className="h-6 w-px bg-gray-200"
@@ -549,23 +553,29 @@ export default function Navbar() {
                   )}
                   {/* Search */}
                   <div className="flex lg:ml-6">
-                    <a
+                    {/* <a
                       href="#"
                       className="p-2 text-gray-400 hover:text-gray-500"
                     >
                       <span className="sr-only">Search</span>
                       <FaSearch className="h-6 w-6" aria-hidden="true" />
-                    </a>
+                    </a> */}
+                    <SearchBar />
                   </div>
                   {/* Cart */}
                   <div className="ml-4 flow-root lg:ml-6">
-                    <a href="#" className="group -m-2 flex items-center p-2">
+                    <a
+                      onClick={() => {
+                        setocart(true);
+                      }}
+                      className="group -m-2 flex items-center p-2"
+                    >
                       <MdOutlineShoppingCart
                         className="h-6 w-6 flex-shrink-0 text-gray-400 group-hover:text-gray-500"
                         aria-hidden="true"
                       />
                       <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">
-                        0
+                        2
                       </span>
                       <span className="sr-only">items in cart, view bag</span>
                     </a>

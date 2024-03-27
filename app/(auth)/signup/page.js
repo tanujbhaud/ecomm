@@ -1,17 +1,62 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../config/firebase";
+import { auth, db } from "../../config/firebase";
 import { useRouter } from "next/navigation";
+import { Timestamp, addDoc, collection } from "firebase/firestore";
+
+import toast from "react-hot-toast";
+import { useAuthState } from "react-firebase-hooks/auth";
 export default function SignUp() {
   const router = useRouter();
-  const [form, setform] = useState({});
-  const signup = async () => {
-    try {
-      await createUserWithEmailAndPassword(auth, form.email, form.password);
+  const [form, setform] = useState({ role: "user", email: "", password: "" });
+  const [user] = useAuthState(auth);
+  useEffect(() => {
+    if (user) {
       router.push("/");
-    } catch (err) {
-      console.error(err);
+    }
+  }, [user]);
+  const signup = async () => {
+    if (form.name !== "" && form.email !== "" && form.password !== "") {
+      try {
+        const users = await createUserWithEmailAndPassword(
+          auth,
+          form.email,
+          form.password
+        );
+
+        // create user object
+        const user = {
+          name: form.name,
+          email: users.user.email,
+          uid: users.user.uid,
+          role: form.role,
+          time: Timestamp.now(),
+          date: new Date().toLocaleString("en-US", {
+            month: "short",
+            day: "2-digit",
+            year: "numeric",
+          }),
+        };
+
+        // create user Refrence
+        const userRefrence = collection(db, "users");
+
+        // Add User Detail
+        addDoc(userRefrence, user);
+        console.log("user", user, users);
+        setform({
+          name: "",
+          email: "",
+          password: "",
+          role: "user",
+        });
+      } catch (err) {
+        console.error(err);
+        toast.error(err.message);
+      }
+    } else {
+      toast.error("Please fill the complete details");
     }
   };
 
@@ -39,6 +84,28 @@ export default function SignUp() {
           >
             <div>
               <label
+                htmlFor="name"
+                className="block text-sm font-medium leading-6 text-gray-900"
+              >
+                Name
+              </label>
+              <div className="mt-2">
+                <input
+                  id="name"
+                  name="name"
+                  value={form.name}
+                  onChange={(e) => {
+                    setform({ ...form, name: e.target.value });
+                  }}
+                  type="name"
+                  required
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
                 htmlFor="email"
                 className="block text-sm font-medium leading-6 text-gray-900"
               >
@@ -53,7 +120,6 @@ export default function SignUp() {
                     setform({ ...form, email: e.target.value });
                   }}
                   type="email"
-                  autoComplete="email"
                   required
                   className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 />
@@ -86,7 +152,6 @@ export default function SignUp() {
                   onChange={(e) => {
                     setform({ ...form, password: e.target.value });
                   }}
-                  autoComplete="current-password"
                   required
                   className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 />

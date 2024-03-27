@@ -1,16 +1,30 @@
 "use client";
 import { auth } from "../../config/firebase";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { useRouter } from "next/navigation";
+
+import toast from "react-hot-toast";
+import { useAuthState } from "react-firebase-hooks/auth";
 export default function ForgotPw() {
   const router = useRouter();
   const [form, setform] = useState({});
+
+  const [user] = useAuthState(auth);
+  useEffect(() => {
+    if (user) {
+      router.push("/");
+    }
+  }, [user]);
   const forgotpw = async () => {
-    try {
-      await sendPasswordResetEmail(auth, form.email);
-    } catch (err) {
-      console.error(err);
+    if (form.email !== "") {
+      try {
+        await sendPasswordResetEmail(auth, form.email);
+      } catch (err) {
+        console.error(err);
+      }
+    } else {
+      toast.error("Please fill the email field");
     }
   };
 
