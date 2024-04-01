@@ -2,13 +2,45 @@
 import Modal from "../modal";
 import { useEffect, useState } from "react/";
 import { db, auth } from "../config/firebase";
-import { query, collection, where, onSnapshot } from "firebase/firestore";
+
+import { useRouter } from "next/navigation";
+import moment from "moment";
+import toast from "react-hot-toast";
+import {
+  query,
+  collection,
+  deleteDoc,
+  where,
+  onSnapshot,
+  addDoc,
+  doc,
+  setDoc,
+  orderBy,
+  Timestamp,
+} from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 export default function Dashboard() {
+  const [addressInfo, setAddressInfo] = useState({
+    address: "",
+    pincode: "",
+    mobileNumber: "",
+  });
+
   const [user] = useAuthState(auth);
   const [userq, setuserq] = useState({});
   const [open, setOpen] = useState(false);
-  const [form, setform] = useState({});
+  const [formstate, setformstate] = useState("create");
+  const [getAllProduct, setGetAllProduct] = useState([]);
+  const [form, setform] = useState({
+    title: "",
+    bname: "",
+    desc: "",
+    price: "",
+    img: "",
+    gender: "",
+    category: "",
+  });
+  const router = useRouter();
   const userValidFunction = async () => {
     // validation
     if (user) {
@@ -25,79 +57,508 @@ export default function Dashboard() {
       } catch (error) {
         console.log(error);
       }
+      getAllProductFunction();
     }
   };
   useEffect(() => {
     userValidFunction();
   }, [user]);
 
+  const getAllProductFunction = async () => {
+    try {
+      const q = query(collection(db, "products"), orderBy("time"));
+      const data = onSnapshot(q, (QuerySnapshot) => {
+        let productArray = [];
+        QuerySnapshot.forEach((doc) => {
+          productArray.push({ ...doc.data(), id: doc.id });
+        });
+        setGetAllProduct(productArray);
+      });
+      return () => data;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  useEffect(() => {
+    getAllProductFunction();
+  }, []);
+  const [selected, setselected] = useState({ us: true, sh: false });
+  const createProduct = async () => {
+    if (
+      form.title === "" ||
+      form.bname === "" ||
+      form.desc === "" ||
+      form.category === "" ||
+      form.price === "" ||
+      form.img === "" ||
+      form.gender === ""
+    ) {
+      return toast("All the fields are required");
+    } else {
+      try {
+        const productRef = collection(db, "products");
+        await addDoc(productRef, {
+          ...form,
+          time: Timestamp.now(),
+          quantity: 1,
+        });
+        setOpen(false);
+
+        toast.success("Created Product Successfully");
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+  const updateProduct = async (id) => {
+    if (
+      form.title === "" ||
+      form.bname === "" ||
+      form.desc === "" ||
+      form.category === "" ||
+      form.price === "" ||
+      form.img === "" ||
+      form.gender === ""
+    ) {
+      return toast("All the fields are required");
+    } else {
+      await setDoc(doc(db, "products", id), {
+        ...form,
+        time: Timestamp.now(),
+        quantity: 1,
+      });
+      setOpen(false);
+      setform({
+        title: "",
+        bname: "",
+        desc: "",
+        price: "",
+        img: "",
+        gender: "",
+        category: "",
+      });
+      toast.success("Product Updated Successfully");
+    }
+  };
+  const deleteProduct = async (id) => {
+    await deleteDoc(doc(db, "products", id));
+    toast.success("Product Deleted Successfully");
+    router.refresh();
+  };
+
   return (
     <>
-      <Modal></Modal>
-      <div className="bg-white overflow-hidden shadow rounded-lg border">
-        <div className="px-4 py-5 sm:px-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            User Profile
-          </h3>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500"></p>
-        </div>
-        <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
-          <dl className="sm:divide-y sm:divide-gray-200">
-            <div className="py-3 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Name</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                {userq.name}
-              </dd>
+      <Modal open={open} setOpen={setOpen}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (formstate === "create") {
+              createProduct();
+            } else if (formstate === "edit") {
+              updateProduct(form.id);
+            }
+          }}
+          className="space-y-6 p-11"
+        >
+          <div>
+            <label
+              htmlFor="title"
+              className="block text-sm font-medium leading-6 text-gray-900"
+            >
+              Title
+            </label>
+            <div className="mt-2">
+              <input
+                id="title"
+                name="title"
+                type="text"
+                value={form.title}
+                onChange={(e) => {
+                  setform({ ...form, title: e.target.value });
+                }}
+                autoComplete="title"
+                required
+                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+              />
             </div>
-            <div className="py-3 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">
-                Email address
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                {userq.email}
-              </dd>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between">
+              <label
+                htmlFor="bname"
+                className="block text-sm font-medium leading-6 text-gray-900"
+              >
+                Brand Name
+              </label>
             </div>
-            <div className="py-3 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">
-                Date Joined:
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                {userq.date}
-              </dd>
+            <div className="mt-2">
+              <input
+                id="bname"
+                name="bname"
+                value={form.bname}
+                onChange={(e) => {
+                  setform({ ...form, bname: e.target.value });
+                }}
+                type="text"
+                autoComplete="bname"
+                required
+                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+              />
             </div>
-            <div className="py-3 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">User ID:</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                {userq.uid}
-              </dd>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between">
+              <label
+                htmlFor="desc"
+                className="block text-sm font-medium leading-6 text-gray-900"
+              >
+                Description{" "}
+              </label>
             </div>
-            {userq.role === "admin" ? (
+            <div className="mt-2">
+              <input
+                id="desc"
+                name="desc"
+                value={form.desc}
+                onChange={(e) => {
+                  setform({ ...form, desc: e.target.value });
+                }}
+                type="text"
+                autoComplete="desc"
+                required
+                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+              />
+            </div>
+          </div>
+          <div>
+            <label
+              htmlFor="Category"
+              className="block mb-2 text-sm font-medium text-gray-900 "
+            >
+              Select a Category
+            </label>
+            <select
+              id="Category"
+              value={form.category}
+              onChange={(e) => {
+                setform({ ...form, category: e.target.value });
+                console.log(e.target.value);
+              }}
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 "
+            >
+              <option defaultValue="">Choose a Category</option>
+              <option value="top">Tops</option>
+              <option value="pant">Pants</option>
+              <option value="sg">Sunglasses</option>
+              <option value="bag">Bags</option>
+
+              <option value="hat">Hats</option>
+
+              <option value="watch">Watches</option>
+            </select>
+          </div>
+          <div>
+            <div className="flex items-center justify-between">
+              <label
+                htmlFor="price"
+                className="block text-sm font-medium leading-6 text-gray-900"
+              >
+                Price (₹)
+              </label>
+            </div>
+            <div className="mt-2">
+              <input
+                id="price"
+                name="price"
+                value={form.price}
+                onChange={(e) => {
+                  setform({ ...form, price: e.target.value });
+                }}
+                type="number"
+                autoComplete="price"
+                required
+                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+              />
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between">
+              <label
+                htmlFor="img"
+                className="block text-sm font-medium leading-6 text-gray-900"
+              >
+                Image
+              </label>
+            </div>
+            <div className="mt-2">
+              <input
+                id="img"
+                name="img"
+                value={form.img}
+                onChange={(e) => {
+                  setform({ ...form, img: e.target.value });
+                }}
+                type="text"
+                autoComplete="img"
+                required
+                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="Gender"
+              className="block mb-2 text-sm font-medium text-gray-900 "
+            >
+              Select Product Gender
+            </label>
+            <select
+              id="gender"
+              value={form.gender}
+              onChange={(e) => {
+                setform({ ...form, gender: e.target.value });
+                console.log(e.target.value);
+              }}
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 "
+            >
+              <option defaultValue="">Choose Product Gender</option>
+              <option value="m">Men</option>
+              <option value="f">Women</option>
+              <option value="b">Unisex</option>
+            </select>
+          </div>
+          <div>
+            <button
+              type="submit"
+              className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            >
+              {formstate === "create"
+                ? "Create"
+                : formstate === "edit"
+                ? "Edit"
+                : ""}
+            </button>
+          </div>
+        </form>
+      </Modal>
+      <div className="bg-white w-full flex flex-col gap-5 px-3 md:px-16 lg:px-28 md:flex-row text-[#161931]">
+        <aside className="hidden py-4 md:w-1/3 lg:w-1/4 md:block">
+          <div className="sticky flex flex-col gap-2 p-4 text-sm border-r border-indigo-100 top-12">
+            <h2 className="pl-3 mb-4 text-2xl font-semibold">Settings</h2>
+            <a
+              onClick={() => {
+                setselected({ sh: false, us: true });
+              }}
+              className={`flex items-center px-3 py-2.5 cursor-pointer${
+                selected.us
+                  ? "font-bold bg-white  text-indigo-900 border rounded-full"
+                  : "font-semibold  hover:text-indigo-900 hover:border hover:rounded-full "
+              }`}
+            >
+              User Profile
+            </a>
+            <a
+              onClick={() => {
+                setselected({ us: false, sh: true });
+              }}
+              className={`flex items-center px-3 py-2.5 cursor-pointer ${
+                selected.sh
+                  ? "font-bold bg-white  text-indigo-900 border rounded-full"
+                  : "font-semibold  hover:text-indigo-900 hover:border hover:rounded-full "
+              }`}
+            >
+              Shipping Info
+            </a>
+          </div>
+        </aside>
+        <main className="w-full py-1 md:w-2/3 lg:w-3/4">
+          <div className="p-2 md:p-4">
+            {selected.us ? (
               <>
-                {" "}
-                <div className="py-3 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Role:</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {userq.role}
-                  </dd>
+                <div className="w-full px-6 pb-8 mt-8 sm:max-w-xl sm:rounded-lg">
+                  <h2 className=" text-2xl font-bold sm:text-xl">
+                    User Profile
+                  </h2>
+                  <div className="grid max-w-2xl mx-auto mt-8">
+                    {/* <div className="flex flex-col items-center space-y-5 sm:flex-row sm:space-y-0">
+                  <img
+                    className="object-cover w-40 h-40 p-1 rounded-full ring-2 ring-indigo-300 dark:ring-indigo-500"
+                    src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGZhY2V8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60"
+                    alt="Bordered avatar"
+                  />
+                  <div className="flex flex-col space-y-5 sm:ml-8">
+                    <button
+                      type="button"
+                      className="py-3.5 px-7 text-base font-medium text-indigo-100 focus:outline-none bg-[#202142] rounded-lg border border-indigo-200 hover:bg-indigo-900 focus:z-10 focus:ring-4 focus:ring-indigo-200 "
+                    >
+                      Change picture
+                    </button>
+                    <button
+                      type="button"
+                      className="py-3.5 px-7 text-base font-medium text-indigo-900 focus:outline-none bg-white rounded-lg border border-indigo-200 hover:bg-indigo-100 hover:text-[#202142] focus:z-10 focus:ring-4 focus:ring-indigo-200 "
+                    >
+                      Delete picture
+                    </button>
+                  </div>
+                </div> */}
+                    <div className="items-center  text-[#202142]">
+                      <div className="flex flex-col items-center w-full mb-2 space-x-0 space-y-2 sm:flex-row sm:space-x-4 sm:space-y-0 sm:mb-6">
+                        <div className="w-full">
+                          <div className="block text-sm font-medium leading-6 text-gray-900">
+                            Name{" "}
+                          </div>
+                          <div className="mt-2">{userq.name}</div>
+                        </div>
+                        <div className="w-full">
+                          <div className="block text-sm font-medium leading-6 text-gray-900">
+                            Email
+                          </div>
+                          <div className="mt-2">{userq.email}</div>
+                        </div>
+                      </div>
+                      <div className="mb-2 sm:mb-6">
+                        <div className="w-full">
+                          <div className="block text-sm font-medium leading-6 text-gray-900">
+                            Date Joined:
+                          </div>
+                          <div className="mt-2">{userq.date}</div>
+                        </div>
+                      </div>
+
+                      {userq.role === "admin" ? (
+                        <div className="w-full">
+                          <div className="block text-sm font-medium leading-6 text-gray-900">
+                            Role
+                          </div>
+                          <div className="mt-2">{userq.role}</div>
+                        </div>
+                      ) : (
+                        " "
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : selected.sh ? (
+              <>
+                <div className="w-full px-6 pb-8 mt-8 sm:max-w-xl sm:rounded-lg">
+                  <h2 className=" text-2xl font-bold sm:text-xl">
+                    Shipping Info{" "}
+                  </h2>
+                  <div className="grid max-w-2xl mx-auto mt-8">
+                    <div className="items-center  text-[#202142]">
+                      <div className="flex flex-col items-center w-full mb-2 space-x-0 space-y-2 sm:flex-row sm:space-x-4 sm:space-y-0 sm:mb-6">
+                        <div className="w-full">
+                          <div className="flex items-center justify-between">
+                            <label
+                              htmlFor="address"
+                              className="block text-sm font-medium leading-6 text-gray-900"
+                            >
+                              Address
+                            </label>
+                          </div>
+                          <div className="mt-2">
+                            <input
+                              id="address"
+                              name="address"
+                              value={addressInfo.address}
+                              onChange={(e) => {
+                                setAddressInfo({
+                                  ...addressInfo,
+                                  address: e.target.value,
+                                });
+                              }}
+                              type="text"
+                              autoComplete="address"
+                              required
+                              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            />
+                          </div>
+                        </div>
+                        <div className="w-full">
+                          <div>
+                            <div className="flex items-center justify-between">
+                              <label
+                                htmlFor="pincode"
+                                className="block text-sm font-medium leading-6 text-gray-900"
+                              >
+                                Pincode{" "}
+                              </label>
+                            </div>
+                            <div className="mt-2">
+                              <input
+                                id="pincode"
+                                name="pincode"
+                                value={addressInfo.pincode}
+                                onChange={(e) => {
+                                  setAddressInfo({
+                                    ...addressInfo,
+                                    pincode: e.target.value,
+                                  });
+                                }}
+                                type="number"
+                                autoComplete="pincode"
+                                required
+                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mb-2 sm:mb-6">
+                        <div className="w-full">
+                          <div>
+                            <label
+                              htmlFor="mobileNumber"
+                              className="block text-sm font-medium leading-6 text-gray-900"
+                            >
+                              Mobile Number
+                            </label>
+                          </div>
+                          <div className="mt-2">
+                            <input
+                              id="mobileNumber"
+                              name="mobileNumber"
+                              value={addressInfo.mobileNumber}
+                              onChange={(e) => {
+                                setAddressInfo({
+                                  ...addressInfo,
+                                  mobileNumber: e.target.value,
+                                });
+                              }}
+                              type="number"
+                              autoComplete="mobileNumber"
+                              required
+                              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end">
+                        <button
+                          type="submit"
+                          className="text-white bg-indigo-700  hover:bg-indigo-800 focus:ring-4 focus:outline-none focus:ring-indigo-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:focus:ring-indigo-800"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </>
             ) : (
               ""
             )}
-
-            {/* <div className="py-3 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Address</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                123 Main St
-                <br />
-                Anytown, USA 12345
-              </dd>
-            </div> */}
-          </dl>
-        </div>
+          </div>
+        </main>
       </div>
 
-      <section className="py-24 relative">
+      <section className="py-5 relative">
         <div className="w-full max-w-7xl px-4 md:px-5 lg-6 mx-auto">
           <h2 className="font-manrope font-bold text-4xl leading-10 text-black text-center">
             Order Details
@@ -109,13 +570,12 @@ export default function Dashboard() {
             <div className="flex flex-col lg:flex-row lg:items-center justify-between px-6 pb-6 border-b border-gray-200">
               <div className="data">
                 <p className="font-semibold text-base leading-7 text-black">
-                  Order Id:{" "}
+                  Order Id:
                   <span className="text-indigo-600 font-medium">#10234987</span>
                 </p>
                 <p className="font-semibold text-base leading-7 text-black mt-4">
-                  Order Payment :{" "}
+                  Order Payment :
                   <span className="text-gray-400 font-medium">
-                    {" "}
                     18th march 2021
                   </span>
                 </p>
@@ -160,7 +620,7 @@ export default function Dashboard() {
                             price
                           </p>
                           <p className="lg:mt-4 font-medium text-sm leading-7 text-indigo-600">
-                            $100
+                            ₹100
                           </p>
                         </div>
                       </div>
@@ -223,7 +683,7 @@ export default function Dashboard() {
                             price
                           </p>
                           <p className="lg:mt-4 font-medium text-sm leading-7 text-indigo-600">
-                            $100
+                            ₹100
                           </p>
                         </div>
                       </div>
@@ -273,28 +733,167 @@ export default function Dashboard() {
                   Cancel Order
                 </button>
                 <p className="font-medium text-lg text-gray-900 pl-6 py-3 max-lg:text-center">
-                  Paid using Credit Card{" "}
+                  Paid using Credit Card
                   <span className="text-gray-500">ending with 8822</span>
                 </p>
               </div>
               <p className="font-semibold text-lg text-black py-6">
-                Total Price: <span className="text-indigo-600"> $200.00</span>
+                Total Price: <span className="text-indigo-600"> ₹200.00</span>
               </p>
-            </div>
-            <div>
-              {" "}
-              <button
-                onClick={() => {
-                  setOpen(true);
-                }}
-                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-              >
-                Create Product{" "}
-              </button>
             </div>
           </div>
         </div>
       </section>
+      {userq.role === "admin" ? (
+        <>
+          {" "}
+          <div className="px-4 mb-5">
+            <button
+              onClick={() => {
+                setOpen(true);
+                setformstate("create");
+              }}
+              className="flex justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            >
+              Create Product
+            </button>
+          </div>
+          <div className="px-4 mb-20 relative overflow-x-auto">
+            <table className="w-full text-sm text-left rtl:text-right text-gray-500 ">
+              <thead className="text-xs text-gray-700 uppercase bg-gray-50 ">
+                <tr>
+                  <th scope="col" className="px-6 py-3">
+                    Product name
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Brand Name{" "}
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Description{" "}
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Category
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Price
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Image url
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Gender{" "}
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Date{" "}
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Edit{" "}
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Delete
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {getAllProduct.map((item) => {
+                  return (
+                    <tr key={item.id} className="bg-white border-b  ">
+                      <th
+                        scope="row"
+                        className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap "
+                      >
+                        {item.title.length < 20 ? (
+                          <>{item.title} </>
+                        ) : (
+                          <>{item.title.substring(0, 20)}...</>
+                        )}
+                      </th>
+                      <td className="px-6 py-4">{item.bname}</td>
+                      <td className="px-6 py-4">
+                        {item.desc.length < 20 ? (
+                          <>{item.desc} </>
+                        ) : (
+                          <>{item.desc.substring(0, 20)}...</>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">{item.category}</td>
+                      <td className="px-6 py-4">₹{item.price}</td>
+                      <td className="px-6 py-4">
+                        <img className="w-10" src={item.img} />
+                      </td>
+                      <td className="px-6 py-4">{item.gender}</td>
+
+                      <td className="px-6 py-4">
+                        {moment(item.time.toDate()).format(
+                          "MMMM Do YYYY, h:mm:ss a"
+                        )}
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => {
+                            setOpen(true);
+                            setform({ ...item });
+                            setformstate("edit");
+                          }}
+                          className="flex justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                        >
+                          Edit
+                        </button>
+                      </td>
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => {
+                            deleteProduct(item.id);
+                          }}
+                          className="flex justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {/* <tr className="bg-white border-b  ">
+                  <th
+                    scope="row"
+                    className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap "
+                  >
+                    Apple MacBook Pro 17"
+                  </th>
+                  <td className="px-6 py-4">Silver</td>
+                  <td className="px-6 py-4">Laptop</td>
+                  <td className="px-6 py-4">₹2999</td>
+                </tr>
+                <tr className="bg-white border-b  ">
+                  <th
+                    scope="row"
+                    className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap "
+                  >
+                    Microsoft Surface Pro
+                  </th>
+                  <td className="px-6 py-4">White</td>
+                  <td className="px-6 py-4">Laptop PC</td>
+                  <td className="px-6 py-4">₹1999</td>
+                </tr>
+                <tr className="bg-white ">
+                  <th
+                    scope="row"
+                    className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap "
+                  >
+                    Magic Mouse 2
+                  </th>
+                  <td className="px-6 py-4">Black</td>
+                  <td className="px-6 py-4">Accessories</td>
+                  <td className="px-6 py-4">₹99</td>
+                </tr> */}
+              </tbody>
+            </table>
+          </div>
+        </>
+      ) : (
+        <></>
+      )}
     </>
   );
 }

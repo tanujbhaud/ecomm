@@ -4,7 +4,7 @@ import { Dialog, RadioGroup, Transition } from "@headlessui/react";
 
 const product = {
   name: "Basic Tee 6-Pack ",
-  price: "$192",
+  price: "₹192",
   rating: 3.9,
   reviewCount: 117,
   href: "#",
@@ -96,7 +96,7 @@ export default function Quickview() {
                         </h3>
 
                         <p className="text-2xl text-gray-900">
-                          {product.price}
+                          ₹{product.price}
                         </p>
 
                         {/* Reviews */}

@@ -4,20 +4,17 @@ import Features from "./features";
 import Sidebar from "./sidebar";
 import Catpreview from "./catpreview";
 import Bigview from "./bigview";
-
+import Plist from "./plist";
 import Bigview2 from "./bigview2";
-import Modal from "./modal";
 export default function Home() {
   return (
     <>
       <Hero />
-      <Trending />
+      <Plist />
+      {/* <Trending /> */}
       {/* <Features /> */}
       {/* <Sidebar /> */}
       <Catpreview />
-      <Bigview />
-      <Bigview2 />
-      <Modal />
     </>
   );
 }

@@ -1,138 +1,42 @@
 "use client";
-/*
-add icons later
-*/
-import { Fragment, useState } from "react";
+import { Fragment, useState, useEffect } from "react";
 import { Dialog, Disclosure, Menu, Transition } from "@headlessui/react";
 import { IoIosClose } from "react-icons/io";
 import { FaFilter } from "react-icons/fa";
 import { FaPlus } from "react-icons/fa6";
+import { db } from "./config/firebase";
 
+import toast from "react-hot-toast";
+import { addToCart, deleteFromCart } from "./redux/cartSlice";
+import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { FaChevronDown } from "react-icons/fa";
-// import { XMarkIcon } from "@heroicons/react/24/outline";
-// import {
-//   MinusIcon,
+import { useParams } from "next/navigation";
+
+import { useDispatch, useSelector } from "react-redux";
 import { FaMinus } from "react-icons/fa6";
 import { IoGrid } from "react-icons/io5";
 
-//   Squares2X2Icon,
-// } from "@heroicons/react/20/solid";
-
-const products = [
-  {
-    id: 1,
-    name: "Basic Tee",
-    href: "",
-    imageSrc:
-      "https://tailwindui.com/img/ecommerce-images/product-page-01-related-product-01.jpg",
-    imageAlt: "Front of men's Basic Tee in black.",
-    price: "$35",
-    color: "Black",
-  },
-  {
-    id: 1,
-    name: "Basic Tee",
-    href: "",
-    imageSrc:
-      "https://tailwindui.com/img/ecommerce-images/product-page-01-related-product-01.jpg",
-    imageAlt: "Front of men's Basic Tee in black.",
-    price: "$35",
-    color: "Black",
-  },
-  {
-    id: 1,
-    name: "Basic Tee",
-    href: "",
-    imageSrc:
-      "https://tailwindui.com/img/ecommerce-images/product-page-01-related-product-01.jpg",
-    imageAlt: "Front of men's Basic Tee in black.",
-    price: "$35",
-    color: "Black",
-  },
-  {
-    id: 2,
-    name: "Basic Tee",
-    href: "",
-    imageSrc:
-      "https://tailwindui.com/img/ecommerce-images/product-page-01-related-product-01.jpg",
-    imageAlt: "Front of men's Basic Tee in black.",
-    price: "$35",
-    color: "Black",
-  },
-  {
-    id: 3,
-    name: "Basic Tee",
-    href: "",
-    imageSrc:
-      "https://tailwindui.com/img/ecommerce-images/product-page-01-related-product-01.jpg",
-    imageAlt: "Front of men's Basic Tee in black.",
-    price: "$35",
-    color: "Black",
-  },
-  {
-    id: 4,
-    name: "Basic Tee",
-    href: "",
-    imageSrc:
-      "https://tailwindui.com/img/ecommerce-images/product-page-01-related-product-01.jpg",
-    imageAlt: "Front of men's Basic Tee in black.",
-    price: "$35",
-    color: "Black",
-  },
-
-  // More products...
-];
-const sortOptions = [
-  { name: "Most Popular", href: "", current: true },
-  { name: "Best Rating", href: "", current: false },
-  { name: "Newest", href: "", current: false },
-  { name: "Price: Low to High", href: "", current: false },
-  { name: "Price: High to Low", href: "", current: false },
-];
-const subCategories = [
-  { name: "Totes", href: "" },
-  { name: "Backpacks", href: "" },
-  { name: "Travel Bags", href: "" },
-  { name: "Hip Bags", href: "" },
-  { name: "Laptop Sleeves", href: "" },
-];
-const filters = [
-  {
-    id: "color",
-    name: "Color",
-    options: [
-      { value: "white", label: "White", checked: false },
-      { value: "beige", label: "Beige", checked: false },
-      { value: "blue", label: "Blue", checked: true },
-      { value: "brown", label: "Brown", checked: false },
-      { value: "green", label: "Green", checked: false },
-      { value: "purple", label: "Purple", checked: false },
-    ],
-  },
-  {
-    id: "category",
-    name: "Category",
-    options: [
-      { value: "new-arrivals", label: "New Arrivals", checked: false },
-      { value: "sale", label: "Sale", checked: false },
-      { value: "travel", label: "Travel", checked: true },
-      { value: "organization", label: "Organization", checked: false },
-      { value: "accessories", label: "Accessories", checked: false },
-    ],
-  },
-  {
-    id: "size",
-    name: "Size",
-    options: [
-      { value: "2l", label: "2L", checked: false },
-      { value: "6l", label: "6L", checked: false },
-      { value: "12l", label: "12L", checked: false },
-      { value: "18l", label: "18L", checked: false },
-      { value: "20l", label: "20L", checked: false },
-      { value: "40l", label: "40L", checked: true },
-    ],
-  },
-];
+import {
+  fetchProductsStart,
+  fetchProductsSuccess,
+  fetchProductsFailure,
+} from "./redux/productSlice";
+import moment from "moment";
+const initialState = {
+  category: [
+    { value: "top", label: "Tops", checked: false },
+    { value: "pant", label: "Pants", checked: false },
+    { value: "sg", label: "Sunglasses", checked: false },
+    { value: "bag", label: "Bags", checked: false },
+    { value: "hat", label: "Hats", checked: false },
+    { value: "watch", label: "Watches", checked: false },
+  ],
+  gender: [
+    { value: "m", label: "Men", checked: false },
+    { value: "f", label: "Women", checked: false },
+    { value: "b", label: "Unisex", checked: false },
+  ],
+};
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -140,6 +44,159 @@ function classNames(...classes) {
 
 export default function Sidebar() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  const [filters, setFilters] = useState(initialState);
+
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [current, setcurrent] = useState({
+    r: true,
+    n: false,
+    lth: false,
+    htl: false,
+  });
+  const dispatch = useDispatch();
+  const pros = useSelector((state) => state.products.items);
+  const loading = useSelector((state) => state.products.loading);
+  const error = useSelector((state) => state.products.error);
+
+  const cartItems = useSelector((state) => state.cart);
+  const fetched = useSelector((state) => state.products.fetched);
+
+  useEffect(() => {
+    // Check if products have already been fetched
+    if (!fetched) {
+      const getAllProductFunction = async () => {
+        try {
+          dispatch(fetchProductsStart());
+          const q = query(collection(db, "products"), orderBy("time"));
+          const data = onSnapshot(q, (QuerySnapshot) => {
+            let productArray = [];
+            QuerySnapshot.forEach((doc) => {
+              productArray.push({ ...doc.data(), id: doc.id });
+            });
+            dispatch(fetchProductsSuccess(productArray));
+            setFilteredProducts(productArray);
+          });
+          return data;
+        } catch (error) {
+          dispatch(fetchProductsFailure(error.message));
+          console.error(error);
+        }
+      };
+
+      getAllProductFunction();
+    }
+  }, [dispatch, fetched]);
+  const handleCheckboxChange = (sectionId, optionIdx) => {
+    const updatedFilters = { ...filters };
+    updatedFilters[sectionId][optionIdx].checked =
+      !updatedFilters[sectionId][optionIdx].checked;
+    setFilters(updatedFilters);
+  };
+
+  const handleFilterButtonClick = () => {
+    const selectedCategoryFilters = filters.category
+      .filter((c) => c.checked)
+      .map((c) => c.value);
+    const selectedGenderFilters = filters.gender
+      .filter((g) => g.checked)
+      .map((g) => g.value);
+
+    const filtered = pros.filter((product) => {
+      const categoryMatch = selectedCategoryFilters.includes(product.category);
+      const genderMatch = selectedGenderFilters.includes(product.gender);
+
+      return categoryMatch && genderMatch;
+    });
+
+    setFilteredProducts(filtered);
+  };
+
+  const handleClearFilters = () => {
+    setFilters(initialState);
+    setFilteredProducts(pros);
+  };
+
+  const sortOptions = [
+    {
+      name: "Relevant",
+      onClick: () => {
+        setFilteredProducts(pros);
+        setcurrent({
+          r: true,
+          n: false,
+          lth: false,
+          htl: false,
+        });
+      },
+      current: current.r,
+    },
+
+    {
+      name: "Newest",
+      onClick: () => {
+        const sortedProducts = [...filteredProducts];
+        sortedProducts.sort(
+          (a, b) =>
+            new Date(moment(b.time.toDate())) -
+            new Date(moment(a.time.toDate()))
+        );
+
+        setFilteredProducts(sortedProducts);
+        setcurrent({
+          r: false,
+          n: true,
+          lth: false,
+          htl: false,
+        });
+      },
+      current: current.n,
+    },
+    {
+      name: "Price: Low to High",
+      onClick: () => {
+        const sortedProducts = [...filteredProducts];
+        sortedProducts.sort((a, b) => a.price - b.price);
+
+        setFilteredProducts(sortedProducts);
+        setcurrent({
+          r: false,
+          n: false,
+          lth: true,
+          htl: false,
+        });
+      },
+      current: current.lth,
+    },
+    {
+      name: "Price: High to Low",
+      onClick: () => {
+        const sortedProducts = [...filteredProducts];
+        sortedProducts.sort((a, b) => b.price - a.price);
+
+        setFilteredProducts(sortedProducts);
+        setcurrent({
+          r: false,
+          n: false,
+          lth: false,
+          htl: true,
+        });
+      },
+      current: current.htl,
+    },
+  ];
+
+  // add to cart function
+  const addCart = (item) => {
+    dispatch(addToCart(item));
+    toast.success("Added to cart");
+  };
+
+  // delete from cart function
+  const deleteCart = (item) => {
+    dispatch(deleteFromCart(item));
+    toast.success("Deleted from cart");
+  };
 
   return (
     <div className="bg-white">
@@ -190,8 +247,8 @@ export default function Sidebar() {
 
                   {/* Filters */}
                   <form className="mt-4 border-t border-gray-200">
-                    <h3 className="sr-only">Categories</h3>
-                    <ul
+                    {/* <h3 className="sr-only">Categories</h3> */}
+                    {/* <ul
                       role="list"
                       className="px-2 py-3 font-medium text-gray-900"
                     >
@@ -202,20 +259,19 @@ export default function Sidebar() {
                           </a>
                         </li>
                       ))}
-                    </ul>
-
-                    {filters.map((section) => (
+                    </ul> */}
+                    {Object.keys(filters).map((sectionId) => (
                       <Disclosure
                         as="div"
-                        key={section.id}
-                        className="border-t border-gray-200 px-4 py-6"
+                        key={sectionId}
+                        className="border-b border-gray-200 py-6"
                       >
                         {({ open }) => (
                           <>
-                            <h3 className="-mx-2 -my-3 flow-root">
-                              <Disclosure.Button className="flex w-full items-center justify-between bg-white px-2 py-3 text-gray-400 hover:text-gray-500">
+                            <h3 className="-my-3 flow-root">
+                              <Disclosure.Button className="flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500">
                                 <span className="font-medium text-gray-900">
-                                  {section.name}
+                                  {sectionId}
                                 </span>
                                 <span className="ml-6 flex items-center">
                                   {open ? (
@@ -233,23 +289,29 @@ export default function Sidebar() {
                               </Disclosure.Button>
                             </h3>
                             <Disclosure.Panel className="pt-6">
-                              <div className="space-y-6">
-                                {section.options.map((option, optionIdx) => (
+                              <div className="space-y-4">
+                                {filters[sectionId].map((option, optionIdx) => (
                                   <div
                                     key={option.value}
                                     className="flex items-center"
                                   >
                                     <input
-                                      id={`filter-mobile-${section.id}-${optionIdx}`}
-                                      name={`${section.id}[]`}
+                                      id={`filter-${sectionId}-${optionIdx}`}
+                                      name={`${sectionId}[]`}
                                       defaultValue={option.value}
                                       type="checkbox"
-                                      defaultChecked={option.checked}
+                                      checked={option.checked}
+                                      onChange={() =>
+                                        handleCheckboxChange(
+                                          sectionId,
+                                          optionIdx
+                                        )
+                                      }
                                       className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                                     />
                                     <label
-                                      htmlFor={`filter-mobile-${section.id}-${optionIdx}`}
-                                      className="ml-3 min-w-0 flex-1 text-gray-500"
+                                      htmlFor={`filter-${sectionId}-${optionIdx}`}
+                                      className="ml-3 text-sm text-gray-600"
                                     >
                                       {option.label}
                                     </label>
@@ -261,6 +323,21 @@ export default function Sidebar() {
                         )}
                       </Disclosure>
                     ))}
+                    <button
+                      type="button"
+                      className="mt-4 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded"
+                      onClick={handleFilterButtonClick}
+                    >
+                      Filter
+                    </button>
+
+                    <button
+                      type="button"
+                      className="mt-4 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded"
+                      onClick={handleClearFilters}
+                    >
+                      Clear All filters
+                    </button>
                   </form>
                 </Dialog.Panel>
               </Transition.Child>
@@ -271,7 +348,7 @@ export default function Sidebar() {
         <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-baseline justify-between border-b border-gray-200 pb-6 pt-10">
             <h1 className="text-4xl font-bold tracking-tight text-gray-900">
-              New Arrivals
+              Discover
             </h1>
 
             <div className="flex items-center">
@@ -297,17 +374,18 @@ export default function Sidebar() {
                 >
                   <Menu.Items className="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none">
                     <div className="py-1">
-                      {sortOptions.map((option) => (
+                      {sortOptions.map((option, index) => (
                         <Menu.Item key={option.name}>
                           {({ active }) => (
                             <a
-                              href={option.href}
+                              key={index}
+                              onClick={option.onClick}
                               className={classNames(
                                 option.current
                                   ? "font-medium text-gray-900"
                                   : "text-gray-500",
                                 active ? "bg-gray-100" : "",
-                                "block px-4 py-2 text-sm"
+                                "block px-4 py-2 text-sm cursor-pointer"
                               )}
                             >
                               {option.name}
@@ -320,13 +398,6 @@ export default function Sidebar() {
                 </Transition>
               </Menu>
 
-              <button
-                type="button"
-                className="-m-2 ml-5 p-2 text-gray-400 hover:text-gray-500 sm:ml-7"
-              >
-                <span className="sr-only">View grid</span>
-                <IoGrid className="h-5 w-5" aria-hidden="true" />
-              </button>
               <button
                 type="button"
                 className="-m-2 ml-4 p-2 text-gray-400 hover:text-gray-500 sm:ml-6 lg:hidden"
@@ -346,7 +417,7 @@ export default function Sidebar() {
             <div className="grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-4">
               {/* Filters */}
               <form className="hidden lg:block">
-                <h3 className="sr-only">Categories</h3>
+                {/* <h3 className="sr-only">Categories</h3>
                 <ul
                   role="list"
                   className="space-y-4 border-b border-gray-200 pb-6 text-sm font-medium text-gray-900"
@@ -356,12 +427,12 @@ export default function Sidebar() {
                       <a href={category.href}>{category.name}</a>
                     </li>
                   ))}
-                </ul>
+                </ul> */}
 
-                {filters.map((section) => (
+                {Object.keys(filters).map((sectionId) => (
                   <Disclosure
                     as="div"
-                    key={section.id}
+                    key={sectionId}
                     className="border-b border-gray-200 py-6"
                   >
                     {({ open }) => (
@@ -369,7 +440,7 @@ export default function Sidebar() {
                         <h3 className="-my-3 flow-root">
                           <Disclosure.Button className="flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500">
                             <span className="font-medium text-gray-900">
-                              {section.name}
+                              {sectionId}
                             </span>
                             <span className="ml-6 flex items-center">
                               {open ? (
@@ -388,21 +459,24 @@ export default function Sidebar() {
                         </h3>
                         <Disclosure.Panel className="pt-6">
                           <div className="space-y-4">
-                            {section.options.map((option, optionIdx) => (
+                            {filters[sectionId].map((option, optionIdx) => (
                               <div
                                 key={option.value}
                                 className="flex items-center"
                               >
                                 <input
-                                  id={`filter-${section.id}-${optionIdx}`}
-                                  name={`${section.id}[]`}
+                                  id={`filter-${sectionId}-${optionIdx}`}
+                                  name={`${sectionId}[]`}
                                   defaultValue={option.value}
                                   type="checkbox"
-                                  defaultChecked={option.checked}
+                                  checked={option.checked}
+                                  onChange={() =>
+                                    handleCheckboxChange(sectionId, optionIdx)
+                                  }
                                   className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                                 />
                                 <label
-                                  htmlFor={`filter-${section.id}-${optionIdx}`}
+                                  htmlFor={`filter-${sectionId}-${optionIdx}`}
                                   className="ml-3 text-sm text-gray-600"
                                 >
                                   {option.label}
@@ -415,41 +489,96 @@ export default function Sidebar() {
                     )}
                   </Disclosure>
                 ))}
+
+                <button
+                  type="button"
+                  className="mt-4 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded"
+                  onClick={handleFilterButtonClick}
+                >
+                  Filter
+                </button>
               </form>
 
               {/* Product grid */}
               <div className="lg:col-span-3">
                 <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
-                  {products.map((product) => (
-                    <div key={product.id} className="group relative">
-                      <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-md bg-gray-200 lg:aspect-none group-hover:opacity-75 lg:h-80">
-                        <img
-                          src={product.imageSrc}
-                          alt={product.imageAlt}
-                          className="h-full w-full object-cover object-center lg:h-full lg:w-full"
-                        />
-                      </div>
-                      <div className="mt-4 flex justify-between">
-                        <div>
-                          <h3 className="text-sm text-gray-700">
-                            <a href={product.href}>
-                              <span
-                                aria-hidden="true"
-                                className="absolute inset-0"
-                              />
-                              {product.name}
-                            </a>
-                          </h3>
-                          <p className="mt-1 text-sm text-gray-500">
-                            {product.color}
-                          </p>
+                  {filteredProducts.map((product) => (
+                    <>
+                      <a
+                        key={product.id}
+                        href={`/product/${product.id}`}
+                        className="max-w-[384px] mx-auto"
+                      >
+                        <div className="w-full max-w-sm aspect-square">
+                          <img
+                            src={product.img}
+                            alt={"Trending product"}
+                            className="w-full h-full object-cover object-center rounded-xl"
+                          />
                         </div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {product.price}
-                        </p>
-                      </div>
-                    </div>
+                        <div className="mt-5 flex items-center justify-between">
+                          <div className="">
+                            <h6 className="font-medium text-xl leading-8 text-black mb-2">
+                              {product.title}
+                            </h6>
+                            <h6 className="font-semibold text-xl leading-8 text-indigo-600">
+                              ₹ {product.price}
+                            </h6>
+                          </div>
+                          {cartItems.some((p) => p.id === product.id) ? (
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                deleteCart(product);
+                              }}
+                              className="p-2 min-[400px]:p-4 rounded-full bg-indigo-600 border border-gray-300 flex items-center justify-center group shadow-sm shadow-transparent transition-all duration-500 hover:shadow-gray-200 hover:border-gray-400 hover:bg-gray-50"
+                            >
+                              <svg
+                                className="stroke-white transition-all duration-500 group-hover:stroke-black"
+                                xmlns="http://www.w3.org/2000/svg"
+                                width={26}
+                                height={26}
+                                viewBox="0 0 26 26"
+                                fill="none"
+                              >
+                                <path
+                                  d="M12.6892 21.125C12.6892 22.0225 11.9409 22.75 11.0177 22.75C10.0946 22.75 9.34632 22.0225 9.34632 21.125M19.3749 21.125C19.3749 22.0225 18.6266 22.75 17.7035 22.75C16.7804 22.75 16.032 22.0225 16.032 21.125M4.88917 6.5L6.4566 14.88C6.77298 16.5715 6.93117 17.4173 7.53301 17.917C8.13484 18.4167 8.99525 18.4167 10.7161 18.4167H18.0056C19.7266 18.4167 20.587 18.4167 21.1889 17.9169C21.7907 17.4172 21.9489 16.5714 22.2652 14.8798L22.8728 11.6298C23.3172 9.25332 23.5394 8.06508 22.8896 7.28254C22.2398 6.5 21.031 6.5 18.6133 6.5H4.88917ZM4.88917 6.5L4.33203 3.25"
+                                  stroke=""
+                                  strokeWidth="1.6"
+                                  strokeLinecap="round"
+                                />
+                              </svg>
+                            </button>
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                addCart(product);
+                              }}
+                              className="p-2 min-[400px]:p-4 rounded-full bg-white border border-gray-300 flex items-center justify-center group shadow-sm shadow-transparent transition-all duration-500 hover:shadow-gray-200 hover:border-gray-400 hover:bg-gray-50"
+                            >
+                              <svg
+                                className="stroke-gray-900 transition-all duration-500 group-hover:stroke-black"
+                                xmlns="http://www.w3.org/2000/svg"
+                                width={26}
+                                height={26}
+                                viewBox="0 0 26 26"
+                                fill="none"
+                              >
+                                <path
+                                  d="M12.6892 21.125C12.6892 22.0225 11.9409 22.75 11.0177 22.75C10.0946 22.75 9.34632 22.0225 9.34632 21.125M19.3749 21.125C19.3749 22.0225 18.6266 22.75 17.7035 22.75C16.7804 22.75 16.032 22.0225 16.032 21.125M4.88917 6.5L6.4566 14.88C6.77298 16.5715 6.93117 17.4173 7.53301 17.917C8.13484 18.4167 8.99525 18.4167 10.7161 18.4167H18.0056C19.7266 18.4167 20.587 18.4167 21.1889 17.9169C21.7907 17.4172 21.9489 16.5714 22.2652 14.8798L22.8728 11.6298C23.3172 9.25332 23.5394 8.06508 22.8896 7.28254C22.2398 6.5 21.031 6.5 18.6133 6.5H4.88917ZM4.88917 6.5L4.33203 3.25"
+                                  stroke=""
+                                  strokeWidth="1.6"
+                                  strokeLinecap="round"
+                                />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      </a>
+                    </>
                   ))}
+                  {filteredProducts.length === 0 ? "No Results found" : ""}
                 </div>
               </div>
             </div>

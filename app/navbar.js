@@ -9,6 +9,7 @@ import { Dialog, Popover, Tab, Transition } from "@headlessui/react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { FaBars, FaSearch } from "react-icons/fa";
 
+import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import SearchBar from "./searchbar";
 const navigation = {
@@ -143,6 +144,7 @@ function classNames(...classes) {
 }
 
 export default function Navbar({ ocart, setocart }) {
+  const cartItems = useSelector((state) => state.cart);
   const [user] = useAuthState(auth);
   const [username, setusername] = useState("");
   const Router = useRouter();
@@ -356,7 +358,7 @@ export default function Navbar({ ocart, setocart }) {
 
         <header className="relative bg-white">
           <p className="flex h-10 items-center justify-center bg-indigo-600 px-4 text-sm font-medium text-white sm:px-6 lg:px-8">
-            Get free delivery on orders over $100
+            Get free delivery on orders over ₹700
           </p>
 
           <nav
@@ -568,14 +570,14 @@ export default function Navbar({ ocart, setocart }) {
                       onClick={() => {
                         setocart(true);
                       }}
-                      className="group -m-2 flex items-center p-2"
+                      className="group -m-2 flex items-center p-2 cursor-pointer"
                     >
                       <MdOutlineShoppingCart
                         className="h-6 w-6 flex-shrink-0 text-gray-400 group-hover:text-gray-500"
                         aria-hidden="true"
                       />
                       <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">
-                        2
+                        {cartItems.length}
                       </span>
                       <span className="sr-only">items in cart, view bag</span>
                     </a>

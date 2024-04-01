@@ -5,7 +5,7 @@ import { RadioGroup } from "@headlessui/react";
 
 const product = {
   name: "Basic Tee 6-Pack",
-  price: "$192",
+  price: "₹192",
   href: "#",
   breadcrumbs: [
     { id: 1, name: "Men", href: "#" },
@@ -153,7 +153,7 @@ export default function Bigview() {
           <div className="mt-4 lg:row-span-3 lg:mt-0">
             <h2 className="sr-only">Product information</h2>
             <p className="text-3xl tracking-tight text-gray-900">
-              {product.price}
+              ₹{product.price}
             </p>
 
             {/* Reviews */}
