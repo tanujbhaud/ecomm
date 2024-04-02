@@ -8,12 +8,22 @@ import { useDispatch, useSelector } from "react-redux";
 import { useAuthState } from "react-firebase-hooks/auth";
 
 import {
-  decrementQuantity,
+  decrement,
   deleteFromCart,
   incrementQuantity,
+  emptyCart,
 } from "../redux/cartSlice";
 import toast from "react-hot-toast";
-import { Timestamp, addDoc, collection } from "firebase/firestore";
+import {
+  Timestamp,
+  addDoc,
+  collection,
+  where,
+  updateDoc,
+  query,
+  getDocs,
+  QuerySnapshot,
+} from "firebase/firestore";
 import { db } from "../config/firebase";
 // const products = [
 //   {
@@ -26,7 +36,7 @@ import { db } from "../config/firebase";
 //     imageSrc:
 //       "https://tailwindui.com/img/ecommerce-images/shopping-cart-page-04-product-01.jpg",
 //     imageAlt:
-//       "Salmon orange fabric pouch with match zipper, gray zipper pull, and adjustable hip belt.",
+//       "Salmon rose fabric pouch with match zipper, gray zipper pull, and adjustable hip belt.",
 //   },
 //   {
 //     id: 2,
@@ -43,6 +53,7 @@ import { db } from "../config/firebase";
 //   // More products...
 // ];
 export default function CartPage() {
+  const router = useRouter();
   const cartItems = useSelector((state) => state.cart);
   const dispatch = useDispatch();
 
@@ -60,10 +71,6 @@ export default function CartPage() {
   };
 
   // const cartQuantity = cartItems.length;
-
-  const cartItemTotal = cartItems
-    .map((item) => item.quantity)
-    .reduce((prevValue, currValue) => prevValue + currValue, 0);
 
   const cartTotal = cartItems
     .map((item) => item.price * item.quantity)
@@ -87,132 +94,165 @@ export default function CartPage() {
     }),
   });
 
-  const buyNowFunction = () => {
+  const deliveryAmount = cartTotal > 700 ? 0 : 60;
+  const taxRate = 0.08;
+  const taxes = (cartTotal + deliveryAmount) * taxRate;
+
+  const total = cartTotal + deliveryAmount + taxes;
+  const shippingFunction = async () => {
     // validation
+    console.log(user.email, user.uid);
+
+    try {
+      const ordersRef = collection(db, "orders");
+      const q = query(ordersRef, where("uid", "==", user.uid));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.size > 0) {
+        querySnapshot.forEach((doc) => {
+          updateDoc(doc.ref, {
+            time: Timestamp.now(),
+            cartItems,
+            status: "confirmed",
+          });
+        });
+        dispatch(emptyCart());
+        toast.success("Order Placed Successfully");
+      } else {
+        setOpen(true);
+      }
+    } catch (error) {
+      console.error("Error updating document: ", error);
+      toast.error("Failed to save shipping info");
+    }
+  };
+  const addressSubmit = async () => {
     if (
-      addressInfo.name === "" ||
       addressInfo.address === "" ||
       addressInfo.pincode === "" ||
       addressInfo.mobileNumber === ""
     ) {
-      return toast.error("All Fields are required");
+      return toast.error("All fields are required");
     }
-
-    // Order Info
+    const ordersRef = collection(db, "orders");
     const orderInfo = {
-      cartItems,
       addressInfo,
       email: user.email,
-      userid: user.uid,
-      status: "confirmed",
+      uid: user.uid,
       time: Timestamp.now(),
     };
-    try {
-      const orderRef = collection(db, "orders");
-      addDoc(orderRef, orderInfo);
-      setAddressInfo({
-        name: "",
-        address: "",
-        pincode: "",
-        mobileNumber: "",
-      });
-      toast.success("Order Placed Successfull");
-    } catch (error) {
-      console.log(error);
-    }
+    await addDoc(ordersRef, orderInfo);
+    toast.success("Shipping info saved successfully");
+    setOpen(false);
+    // continue with checkout
   };
-
   return (
     <>
       <Modal open={open} setOpen={setOpen}>
         <form
           onSubmit={(e) => {
             e.preventDefault();
+            addressSubmit();
           }}
           className="space-y-6 p-11"
         >
-          <div>
-            <div className="flex items-center justify-between">
-              <label
-                htmlFor="address"
-                className="block text-sm font-medium leading-6 text-gray-900"
-              >
-                Address
-              </label>
+          <div className="items-center  text-[#202142]">
+            <div className="flex flex-col items-center w-full mb-2 space-x-0 space-y-2 sm:flex-row sm:space-x-4 sm:space-y-0 sm:mb-6">
+              <div className="w-full">
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="address"
+                    className="block text-sm font-medium leading-6 text-gray-900"
+                  >
+                    Address
+                  </label>
+                </div>
+                <div className="mt-2">
+                  <input
+                    id="address"
+                    name="address"
+                    value={addressInfo.address}
+                    onChange={(e) => {
+                      setAddressInfo({
+                        ...addressInfo,
+                        address: e.target.value,
+                      });
+                    }}
+                    type="text"
+                    autoComplete="address"
+                    required
+                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-rose-600 sm:text-sm sm:leading-6"
+                  />
+                </div>
+              </div>
+              <div className="w-full">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label
+                      htmlFor="pincode"
+                      className="block text-sm font-medium leading-6 text-gray-900"
+                    >
+                      Pincode{" "}
+                    </label>
+                  </div>
+                  <div className="mt-2">
+                    <input
+                      id="pincode"
+                      name="pincode"
+                      value={addressInfo.pincode}
+                      onChange={(e) => {
+                        setAddressInfo({
+                          ...addressInfo,
+                          pincode: e.target.value,
+                        });
+                      }}
+                      type="number"
+                      autoComplete="pincode"
+                      required
+                      className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-rose-600 sm:text-sm sm:leading-6"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="mt-2">
-              <input
-                id="address"
-                name="address"
-                value={addressInfo.address}
-                onChange={(e) => {
-                  setAddressInfo({ ...addressInfo, address: e.target.value });
-                }}
-                type="text"
-                autoComplete="address"
-                required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              />
+            <div className="mb-2 sm:mb-6">
+              <div className="w-full">
+                <div>
+                  <label
+                    htmlFor="mobileNumber"
+                    className="block text-sm font-medium leading-6 text-gray-900"
+                  >
+                    MobileNumber Number
+                  </label>
+                </div>
+                <div className="mt-2">
+                  <input
+                    id="mobileNumber"
+                    name="mobileNumber"
+                    value={addressInfo.mobileNumber}
+                    onChange={(e) => {
+                      setAddressInfo({
+                        ...addressInfo,
+                        mobileNumber: e.target.value,
+                      });
+                    }}
+                    type="number"
+                    autoComplete="mobileNumber"
+                    required
+                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-rose-600 sm:text-sm sm:leading-6"
+                  />
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div>
-            <div className="flex items-center justify-between">
-              <label
-                htmlFor="pincode"
-                className="block text-sm font-medium leading-6 text-gray-900"
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                className="text-white bg-rose-700  hover:bg-rose-800 focus:ring-4 focus:outline-none focus:ring-rose-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-rose-600 dark:hover:bg-rose-700 dark:focus:ring-rose-800"
               >
-                Pincode{" "}
-              </label>
+                Save
+              </button>
             </div>
-            <div className="mt-2">
-              <input
-                id="pincode"
-                name="pincode"
-                value={addressInfo.pincode}
-                onChange={(e) => {
-                  setAddressInfo({ ...addressInfo, pincode: e.target.value });
-                }}
-                type="number"
-                autoComplete="pincode"
-                required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              />
-            </div>
-          </div>
-          <div>
-            <label
-              htmlFor="mobileNumber"
-              className="block text-sm font-medium leading-6 text-gray-900"
-            >
-              Mobile Number
-            </label>
-          </div>
-          <div className="mt-2">
-            <input
-              id="mobileNumber"
-              name="mobileNumber"
-              value={addressInfo.mobileNumber}
-              onChange={(e) => {
-                setAddressInfo({
-                  ...addressInfo,
-                  mobileNumber: e.target.value,
-                });
-              }}
-              type="number"
-              autoComplete="mobileNumber"
-              required
-              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-            />
-          </div>
-
-          <div>
-            <button
-              type="submit"
-              className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-            >
-              Submit
-            </button>
           </div>
         </form>
       </Modal>
@@ -270,7 +310,7 @@ export default function CartPage() {
                           <button
                             onClick={() => deleteCart(product)}
                             type="button"
-                            className="font-medium text-indigo-600 hover:text-indigo-500"
+                            className="font-medium text-rose-600 hover:text-rose-500"
                           >
                             Remove
                           </button>
@@ -283,43 +323,61 @@ export default function CartPage() {
             </div>
           </div>
         </div>
+        {cartItems.length > 0 ? (
+          <>
+            <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
+              <div className="flex justify-between text-base font-medium text-gray-900">
+                <p>Subtotal: </p>
+                <p>₹{cartTotal}</p>
+              </div>
+              <div className="flex justify-between text-base font-medium text-gray-900">
+                <p>Shipping: </p>
+                <p>{cartTotal > 700 ? <>FREE</> : <>₹60</>}</p>
+              </div>
 
-        <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
-          <div className="flex justify-between text-base font-medium text-gray-900">
-            <p>Subtotal: </p>
-            <p>₹{cartTotal}</p>
-          </div>
-          <p className="mt-0.5 text-sm text-gray-500">
-            Shipping and taxes calculated at checkout.
-          </p>
-          <div className="mt-6">
-            <button
-              onClick={() => {
-                if (user) {
-                  setOpen(true);
-                } else {
-                  router.push("/signin");
-                }
-              }}
-              className="flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700"
-            >
-              Checkout
-            </button>
-          </div>
-          <div className="mt-6 flex justify-center text-center text-sm text-gray-500">
-            <p>
-              or{" "}
-              <button
-                type="button"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
-                onClick={() => setOpen(false)}
-              >
-                Continue Shopping
-                <span aria-hidden="true"> &rarr;</span>
-              </button>
-            </p>
-          </div>
-        </div>
+              <div className="flex justify-between text-base font-medium text-gray-900">
+                <p>Taxes (8%:): </p>
+                <p>₹{taxes.toFixed(2)}</p>
+              </div>
+
+              <div class="mt-6 flex items-center justify-between">
+                <p class="text-base font-medium text-gray-900">Total</p>
+                <p class="text-2xl font-semibold text-gray-900">
+                  ₹{total.toFixed(2)}
+                </p>
+              </div>
+              <div className="mt-6">
+                <button
+                  onClick={() => {
+                    if (user) {
+                      shippingFunction();
+                    } else {
+                      router.push("/signin");
+                    }
+                  }}
+                  className="flex items-center justify-center rounded-md border border-transparent bg-rose-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-rose-700"
+                >
+                  Checkout
+                </button>
+              </div>
+              <div className="mt-6 flex justify-center text-center text-sm text-gray-500">
+                <p>
+                  or{" "}
+                  <button
+                    type="button"
+                    className="font-medium text-rose-600 hover:text-rose-500"
+                    onClick={() => setOpen(false)}
+                  >
+                    Continue Shopping
+                    <span aria-hidden="true"> &rarr;</span>
+                  </button>
+                </p>
+              </div>
+            </div>
+          </>
+        ) : (
+          <></>
+        )}
       </div>
     </>
   );

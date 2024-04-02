@@ -1,29 +1,28 @@
 const callouts = [
   {
-    name: "Desk and Office",
-    description: "Work from home accessories",
+    name: "Explore Our Versatile Top Selection",
+    description: "Upgrade Your Wardrobe with Comfort and Confidence!",
     imageSrc:
-      "https://tailwindui.com/img/ecommerce-images/home-page-02-edition-01.jpg",
+      "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     imageAlt:
       "Desk with leather desk pad, walnut desk organizer, wireless keyboard and mouse, and porcelain mug.",
-    href: "#",
+    href: "/discover?cat=top&arr=true&f=true",
   },
   {
-    name: "Self-Improvement",
-    description: "Journals and note-taking",
+    name: "Shop Stylish Hats Online",
+    description: "Discover Your Signature Look Today!",
     imageSrc:
-      "https://tailwindui.com/img/ecommerce-images/home-page-02-edition-02.jpg",
-    imageAlt:
-      "Wood table with porcelain mug, leather journal, brass pen, leather key ring, and a houseplant.",
-    href: "#",
+      "https://images.unsplash.com/photo-1569520045266-66f21ad8a4be?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    imageAlt: "hats",
+    href: "/discover?cat=hat&arr=true&f=true",
   },
   {
-    name: "Travel",
+    name: "Women Trousers & Jeans",
     description: "Daily commute essentials",
     imageSrc:
-      "https://tailwindui.com/img/ecommerce-images/home-page-02-edition-03.jpg",
-    imageAlt: "Collection of four insulated travel bottles on wooden shelf.",
-    href: "#",
+      "https://images.unsplash.com/photo-1616178193482-4dad15347c26?q=80&w=1336&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    imageAlt: "clothes",
+    href: "/discover?cat=pant&gen=f&f=true",
   },
 ];
 

@@ -83,7 +83,7 @@ export default function Hero() {
 
               <a
                 href="/discover"
-                className="inline-block rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-center font-medium text-white hover:bg-indigo-700"
+                className="inline-block rounded-md border border-transparent bg-rose-600 px-8 py-3 text-center font-medium text-white hover:bg-rose-700"
               >
                 Shop Collection
               </a>

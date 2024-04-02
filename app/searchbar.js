@@ -12,13 +12,6 @@ const SearchBar = () => {
       productImageUrl: "",
     },
   ];
-  // Search State
-  const [search, setSearch] = useState("");
-
-  // Filter Search Data
-  const filterSearchData = getAllProduct
-    .filter((obj) => obj.title.toLowerCase().includes(search))
-    .slice(0, 8);
 
   return (
     <div className="">

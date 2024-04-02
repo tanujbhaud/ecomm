@@ -127,7 +127,7 @@ export default function Plist() {
                       <h6 className="font-medium text-xl leading-8 text-black mb-2">
                         {product.title}
                       </h6>
-                      <h6 className="font-semibold text-xl leading-8 text-indigo-600">
+                      <h6 className="font-semibold text-xl leading-8 text-rose-600">
                         ₹ {product.price}
                       </h6>
                     </div>
@@ -137,7 +137,7 @@ export default function Plist() {
                           e.preventDefault();
                           deleteCart(product);
                         }}
-                        className="p-2 min-[400px]:p-4 rounded-full bg-indigo-600 border border-gray-300 flex items-center justify-center group shadow-sm shadow-transparent transition-all duration-500 hover:shadow-gray-200 hover:border-gray-400 hover:bg-gray-50"
+                        className="p-2 min-[400px]:p-4 rounded-full bg-rose-600 border border-gray-300 flex items-center justify-center group shadow-sm shadow-transparent transition-all duration-500 hover:shadow-gray-200 hover:border-gray-400 hover:bg-gray-50"
                       >
                         <svg
                           className="stroke-white transition-all duration-500 group-hover:stroke-black"
@@ -197,7 +197,7 @@ export default function Plist() {
                   <h6 className="font-medium text-xl leading-8 text-black mb-2">
                     Skin care cream
                   </h6>
-                  <h6 className="font-semibold text-xl leading-8 text-indigo-600">
+                  <h6 className="font-semibold text-xl leading-8 text-rose-600">
                     $74.99
                   </h6>
                 </div>
@@ -233,7 +233,7 @@ export default function Plist() {
                   <h6 className="font-medium text-xl leading-8 text-black mb-2">
                     Men’s Facial
                   </h6>
-                  <h6 className="font-semibold text-xl leading-8 text-indigo-600">
+                  <h6 className="font-semibold text-xl leading-8 text-rose-600">
                     $25
                   </h6>
                 </div>
@@ -263,7 +263,7 @@ export default function Plist() {
                   alt="serum bottle image"
                   className="w-full h-full rounded-xl"
                 />
-                <span className="py-1 min-[400px]:py-2 px-2 min-[400px]:px-4 cursor-pointer rounded-lg bg-gradient-to-tr from-indigo-600 to-purple-600 font-medium text-base leading-7 text-white absolute top-3 right-3 z-10">
+                <span className="py-1 min-[400px]:py-2 px-2 min-[400px]:px-4 cursor-pointer rounded-lg bg-gradient-to-tr from-rose-600 to-purple-600 font-medium text-base leading-7 text-white absolute top-3 right-3 z-10">
                   20% Off
                 </span>
               </div>
@@ -272,7 +272,7 @@ export default function Plist() {
                   <h6 className="font-medium text-xl leading-8 text-black mb-2">
                     Dark circles serum
                   </h6>
-                  <h6 className="font-semibold text-xl leading-8 text-indigo-600">
+                  <h6 className="font-semibold text-xl leading-8 text-rose-600">
                     $199.99
                   </h6>
                 </div>
