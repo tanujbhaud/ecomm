@@ -31,6 +31,9 @@ export const cartSlice = createSlice({
         return item;
       });
     },
+    emptyCart: (state) => {
+      return [];
+    },
   },
 });
 
@@ -39,6 +42,7 @@ export const {
   deleteFromCart,
   incrementQuantity,
   decrementQuantity,
+  emptyCart,
 } = cartSlice.actions;
 
 export default cartSlice.reducer;

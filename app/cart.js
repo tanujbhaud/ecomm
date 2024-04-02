@@ -23,7 +23,7 @@ import { IoIosClose } from "react-icons/io";
 //     imageSrc:
 //       "https://tailwindui.com/img/ecommerce-images/shopping-cart-page-04-product-01.jpg",
 //     imageAlt:
-//       "Salmon orange fabric pouch with match zipper, gray zipper pull, and adjustable hip belt.",
+//       "Salmon rose fabric pouch with match zipper, gray zipper pull, and adjustable hip belt.",
 //   },
 //   {
 //     id: 2,
@@ -41,6 +41,7 @@ import { IoIosClose } from "react-icons/io";
 // ];
 
 export default function Cart({ open, setOpen }) {
+  const [tot, settot] = useState(0);
   const cartItems = useSelector((state) => state.cart);
   const dispatch = useDispatch();
 
@@ -58,10 +59,6 @@ export default function Cart({ open, setOpen }) {
   };
 
   // const cartQuantity = cartItems.length;
-
-  const cartItemTotal = cartItems
-    .map((item) => item.quantity)
-    .reduce((prevValue, currValue) => prevValue + currValue, 0);
 
   const cartTotal = cartItems
     .map((item) => item.price * item.quantity)
@@ -87,46 +84,6 @@ export default function Cart({ open, setOpen }) {
       year: "numeric",
     }),
   });
-
-  const buyNowFunction = () => {
-    // validation
-    if (
-      addressInfo.name === "" ||
-      addressInfo.address === "" ||
-      addressInfo.pincode === "" ||
-      addressInfo.mobileNumber === ""
-    ) {
-      return toast.error("All Fields are required");
-    }
-
-    // Order Info
-    const orderInfo = {
-      cartItems,
-      addressInfo,
-      email: user.email,
-      userid: user.uid,
-      status: "confirmed",
-      time: Timestamp.now(),
-      date: new Date().toLocaleString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
-      }),
-    };
-    try {
-      const orderRef = collection(fireDB, "order");
-      addDoc(orderRef, orderInfo);
-      setAddressInfo({
-        name: "",
-        address: "",
-        pincode: "",
-        mobileNumber: "",
-      });
-      toast.success("Order Placed Successfull");
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   return (
     <Transition.Root show={open} as={Fragment}>
@@ -185,7 +142,10 @@ export default function Cart({ open, setOpen }) {
                             className="-my-6 divide-y divide-gray-200"
                           >
                             {cartItems?.map((product) => (
-                              <li key={product.id} className="flex py-6">
+                              <li
+                                key={`cart-${product.id}`}
+                                className="flex py-6"
+                              >
                                 <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
                                   <img
                                     src={product.img}
@@ -235,7 +195,7 @@ export default function Cart({ open, setOpen }) {
                                       <button
                                         onClick={() => deleteCart(product)}
                                         type="button"
-                                        className="font-medium text-indigo-600 hover:text-indigo-500"
+                                        className="font-medium text-rose-600 hover:text-rose-500"
                                       >
                                         Remove
                                       </button>
@@ -260,7 +220,7 @@ export default function Cart({ open, setOpen }) {
                       <div className="mt-6">
                         <a
                           href="/cart"
-                          className="flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700"
+                          className="flex items-center justify-center rounded-md border border-transparent bg-rose-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-rose-700"
                         >
                           Checkout
                         </a>
@@ -270,7 +230,7 @@ export default function Cart({ open, setOpen }) {
                           or{" "}
                           <button
                             type="button"
-                            className="font-medium text-indigo-600 hover:text-indigo-500"
+                            className="font-medium text-rose-600 hover:text-rose-500"
                             onClick={() => setOpen(false)}
                           >
                             Continue Shopping

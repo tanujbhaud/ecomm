@@ -11,7 +11,7 @@ import { FaBars, FaSearch } from "react-icons/fa";
 
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
-import SearchBar from "./searchbar";
+
 const navigation = {
   categories: [
     {
@@ -20,7 +20,7 @@ const navigation = {
       featured: [
         {
           name: "New Arrivals",
-          href: "#",
+          href: "/discover?arr=true&gen=f&f=true",
           imageSrc:
             "https://tailwindui.com/img/ecommerce-images/mega-menu-category-01.jpg",
           imageAlt:
@@ -28,7 +28,7 @@ const navigation = {
         },
         {
           name: "Basic Tees",
-          href: "#",
+          href: "/discover?cat=top&gen=f&f=true",
           imageSrc:
             "https://tailwindui.com/img/ecommerce-images/mega-menu-category-02.jpg",
           imageAlt:
@@ -40,40 +40,30 @@ const navigation = {
           id: "clothing",
           name: "Clothing",
           items: [
-            { name: "Tops", href: "#" },
-            { name: "Dresses", href: "#" },
-            { name: "Pants", href: "#" },
-            { name: "Denim", href: "#" },
-            { name: "Sweaters", href: "#" },
-            { name: "T-Shirts", href: "#" },
-            { name: "Jackets", href: "#" },
-            { name: "Activewear", href: "#" },
-            { name: "Browse All", href: "#" },
+            { name: "Tops", href: "/discover?cat=top&gen=f&f=true" },
+            { name: "Pants", href: "/discover?cat=pant&gen=f&f=true" },
           ],
         },
         {
           id: "accessories",
           name: "Accessories",
           items: [
-            { name: "Watches", href: "#" },
-            { name: "Wallets", href: "#" },
-            { name: "Bags", href: "#" },
-            { name: "Sunglasses", href: "#" },
-            { name: "Hats", href: "#" },
-            { name: "Belts", href: "#" },
+            { name: "Watches", href: "/discover?cat=watch&gen=f&f=true" },
+            { name: "Bags", href: "/discover?cat=bag&gen=f&f=true" },
+            { name: "Sunglasses", href: "/discover?cat=sg&gen=f&f=true" },
+            { name: "Hats", href: "/discover?cat=hat&gen=f&f=true" },
           ],
         },
-        {
-          id: "brands",
-          name: "Brands",
-          items: [
-            { name: "Full Nelson", href: "#" },
-            { name: "My Way", href: "#" },
-            { name: "Re-Arranged", href: "#" },
-            { name: "Counterfeit", href: "#" },
-            { name: "Significant Other", href: "#" },
-          ],
-        },
+        // {
+        //   id: "brands",
+        //   name: "Brands",
+        //   items: [
+        //     { name: "Solo", href: "#" },
+        //     { name: "Laura  ", href: "#" },
+        //     { name: "Engin", href: "#" },
+        //     { name: "Gentle Monster", href: "#" },
+        //   ],
+        // },
       ],
     },
     {
@@ -82,7 +72,7 @@ const navigation = {
       featured: [
         {
           name: "New Arrivals",
-          href: "#",
+          href: "/discover?arr=true&gen=m&f=true",
           imageSrc:
             "https://tailwindui.com/img/ecommerce-images/product-page-04-detail-product-shot-01.jpg",
           imageAlt:
@@ -90,7 +80,7 @@ const navigation = {
         },
         {
           name: "Artwork Tees",
-          href: "#",
+          href: "/discover?cat=top&gen=m&f=true",
           imageSrc:
             "https://tailwindui.com/img/ecommerce-images/category-page-02-image-card-06.jpg",
           imageAlt:
@@ -102,37 +92,33 @@ const navigation = {
           id: "clothing",
           name: "Clothing",
           items: [
-            { name: "Tops", href: "#" },
-            { name: "Pants", href: "#" },
-            { name: "Sweaters", href: "#" },
-            { name: "T-Shirts", href: "#" },
-            { name: "Jackets", href: "#" },
-            { name: "Activewear", href: "#" },
-            { name: "Browse All", href: "#" },
+            { name: "Tops", href: "/discover?cat=topt&gen=m&f=true" },
+            { name: "Pants", href: "/discover?cat=pant&gen=m&f=true" },
           ],
         },
         {
           id: "accessories",
           name: "Accessories",
           items: [
-            { name: "Watches", href: "#" },
-            { name: "Wallets", href: "#" },
-            { name: "Bags", href: "#" },
-            { name: "Sunglasses", href: "#" },
-            { name: "Hats", href: "#" },
-            { name: "Belts", href: "#" },
+            { name: "Watches", href: "/discover?cat=watch&gen=m&f=true" },
+            { name: "Bags", href: "/discover?cat=hat&gen=m&f=true" },
+            { name: "Sunglasses", href: "/discover?cat=sg&gen=m&f=true" },
+            { name: "Hats", href: "/discover?cat=hat&gen=m&f=true" },
           ],
         },
-        {
-          id: "brands",
-          name: "Brands",
-          items: [
-            { name: "Re-Arranged", href: "#" },
-            { name: "Counterfeit", href: "#" },
-            { name: "Full Nelson", href: "#" },
-            { name: "My Way", href: "#" },
-          ],
-        },
+        // {
+        //   id: "brands",
+        //   name: "Brands",
+        //   items: [
+        //     { name: "The Bar", href: "#" },
+        //     { name: "Solo", href: "#" },
+        //     { name: "Nimble", href: "#" },
+        //     { name: "Gentle Monster", href: "#" },
+
+        //     { name: "Ray Ban", href: "#" },
+        //     { name: "Mellow", href: "#" },
+        //   ],
+        // },
       ],
     },
   ],
@@ -224,7 +210,7 @@ export default function Navbar({ ocart, setocart }) {
                             className={({ selected }) =>
                               classNames(
                                 selected
-                                  ? "border-indigo-600 text-indigo-600"
+                                  ? "border-rose-600 text-rose-600"
                                   : "border-transparent text-gray-900",
                                 "flex-1 whitespace-nowrap border-b-2 px-1 py-4 text-base font-medium"
                               )
@@ -357,7 +343,7 @@ export default function Navbar({ ocart, setocart }) {
         </Transition.Root>
 
         <header className="relative bg-white">
-          <p className="flex h-10 items-center justify-center bg-indigo-600 px-4 text-sm font-medium text-white sm:px-6 lg:px-8">
+          <p className="flex h-10 items-center justify-center bg-rose-600 px-4 text-sm font-medium text-white sm:px-6 lg:px-8">
             Get free delivery on orders over ₹700
           </p>
 
@@ -383,7 +369,7 @@ export default function Navbar({ ocart, setocart }) {
                     <span className="sr-only">Your Company</span>
                     <img
                       className="h-8 w-auto"
-                      src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
+                      src="logos/png/logo.png"
                       alt=""
                     />
                   </a>
@@ -400,7 +386,7 @@ export default function Navbar({ ocart, setocart }) {
                               <Popover.Button
                                 className={classNames(
                                   open
-                                    ? "border-indigo-600 text-indigo-600"
+                                    ? "border-rose-600 text-rose-600"
                                     : "border-transparent text-gray-700 hover:text-gray-800",
                                   "relative z-10 -mb-px flex items-center border-b-2 pt-px text-sm font-medium transition-colors duration-200 ease-out"
                                 )}
@@ -555,14 +541,13 @@ export default function Navbar({ ocart, setocart }) {
                   )}
                   {/* Search */}
                   <div className="flex lg:ml-6">
-                    {/* <a
-                      href="#"
+                    <a
+                      href="/discover"
                       className="p-2 text-gray-400 hover:text-gray-500"
                     >
                       <span className="sr-only">Search</span>
                       <FaSearch className="h-6 w-6" aria-hidden="true" />
-                    </a> */}
-                    <SearchBar />
+                    </a>
                   </div>
                   {/* Cart */}
                   <div className="ml-4 flow-root lg:ml-6">

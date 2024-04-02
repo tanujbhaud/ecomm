@@ -123,7 +123,7 @@ export default function Quickview() {
                             </p>
                             <a
                               href="#"
-                              className="ml-3 text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                              className="ml-3 text-sm font-medium text-rose-600 hover:text-rose-500"
                             >
                               {product.reviewCount} reviews
                             </a>
@@ -197,7 +197,7 @@ export default function Quickview() {
                               </h4>
                               <a
                                 href="#"
-                                className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                                className="text-sm font-medium text-rose-600 hover:text-rose-500"
                               >
                                 Size guide
                               </a>
@@ -222,7 +222,7 @@ export default function Quickview() {
                                         size.inStock
                                           ? "cursor-pointer bg-white text-gray-900 shadow-sm"
                                           : "cursor-not-allowed bg-gray-50 text-gray-200",
-                                        active ? "ring-2 ring-indigo-500" : "",
+                                        active ? "ring-2 ring-rose-500" : "",
                                         "group relative flex items-center justify-center rounded-md border py-3 px-4 text-sm font-medium uppercase hover:bg-gray-50 focus:outline-none sm:flex-1"
                                       )
                                     }
@@ -237,7 +237,7 @@ export default function Quickview() {
                                             className={classNames(
                                               active ? "border" : "border-2",
                                               checked
-                                                ? "border-indigo-500"
+                                                ? "border-rose-500"
                                                 : "border-transparent",
                                               "pointer-events-none absolute -inset-px rounded-md"
                                             )}
@@ -274,7 +274,7 @@ export default function Quickview() {
 
                           <button
                             type="submit"
-                            className="mt-6 flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                            className="mt-6 flex w-full items-center justify-center rounded-md border border-transparent bg-rose-600 px-8 py-3 text-base font-medium text-white hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"
                           >
                             Add to bag
                           </button>

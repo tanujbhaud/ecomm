@@ -10,39 +10,54 @@ import toast from "react-hot-toast";
 import { addToCart, deleteFromCart } from "./redux/cartSlice";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { FaChevronDown } from "react-icons/fa";
-import { useParams } from "next/navigation";
 
 import { useDispatch, useSelector } from "react-redux";
 import { FaMinus } from "react-icons/fa6";
-import { IoGrid } from "react-icons/io5";
 
+import { useSearchParams } from "next/navigation";
 import {
   fetchProductsStart,
   fetchProductsSuccess,
   fetchProductsFailure,
 } from "./redux/productSlice";
 import moment from "moment";
-const initialState = {
-  category: [
-    { value: "top", label: "Tops", checked: false },
-    { value: "pant", label: "Pants", checked: false },
-    { value: "sg", label: "Sunglasses", checked: false },
-    { value: "bag", label: "Bags", checked: false },
-    { value: "hat", label: "Hats", checked: false },
-    { value: "watch", label: "Watches", checked: false },
-  ],
-  gender: [
-    { value: "m", label: "Men", checked: false },
-    { value: "f", label: "Women", checked: false },
-    { value: "b", label: "Unisex", checked: false },
-  ],
-};
 
+// const subCategories = [
+//   { name: "Totes", href: "#" },
+//   { name: "Backpacks", href: "#" },
+//   { name: "Travel Bags", href: "#" },
+//   { name: "Hip Bags", href: "#" },
+//   { name: "Laptop Sleeves", href: "#" },
+// ];
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
 export default function Sidebar() {
+  // Search State
+  const [search, setSearch] = useState("");
+
+  const searchParams = useSearchParams();
+
+  const cat = searchParams.get("cat");
+  const gen = searchParams.get("gen");
+  const f = searchParams.get("f");
+  const arr = searchParams.get("arr");
+  const initialState = {
+    category: [
+      { value: "top", label: "Tops", checked: cat === "top" },
+      { value: "pant", label: "Pants", checked: cat === "pant" },
+      { value: "sg", label: "Sunglasses", checked: cat === "sg" },
+      { value: "bag", label: "Bags", checked: cat === "bag" },
+      { value: "hat", label: "Hats", checked: cat === "hat" },
+      { value: "watch", label: "Watches", checked: cat === "watch" },
+    ],
+    gender: [
+      { value: "m", label: "Men", checked: gen === "m" },
+      { value: "f", label: "Women", checked: gen === "f" },
+      { value: "b", label: "Unisex", checked: gen === "b" },
+    ],
+  };
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const [filters, setFilters] = useState(initialState);
@@ -62,6 +77,10 @@ export default function Sidebar() {
   const cartItems = useSelector((state) => state.cart);
   const fetched = useSelector((state) => state.products.fetched);
 
+  // Filter Search Data
+  const filterSearchData = pros
+    .filter((obj) => obj.title.toLowerCase().includes(search))
+    .slice(0, 8);
   useEffect(() => {
     // Check if products have already been fetched
     if (!fetched) {
@@ -87,6 +106,27 @@ export default function Sidebar() {
       getAllProductFunction();
     }
   }, [dispatch, fetched]);
+
+  useEffect(() => {
+    console.log("but this did");
+    if (arr === "true") {
+      console.log("this never ran");
+      const sortedProducts = [...filteredProducts];
+      sortedProducts.sort(
+        (a, b) =>
+          new Date(moment(b.time.toDate())) - new Date(moment(a.time.toDate()))
+      );
+
+      setFilteredProducts(sortedProducts);
+
+      setcurrent({
+        r: false,
+        n: true,
+        lth: false,
+        htl: false,
+      });
+    }
+  }, [pros]);
   const handleCheckboxChange = (sectionId, optionIdx) => {
     const updatedFilters = { ...filters };
     updatedFilters[sectionId][optionIdx].checked =
@@ -95,16 +135,43 @@ export default function Sidebar() {
   };
 
   const handleFilterButtonClick = () => {
-    const selectedCategoryFilters = filters.category
-      .filter((c) => c.checked)
-      .map((c) => c.value);
-    const selectedGenderFilters = filters.gender
-      .filter((g) => g.checked)
-      .map((g) => g.value);
+    // Create new state objects based on the current state
+    let newCategoryState = filters.category.slice();
+    let newGenderState = filters.gender.slice();
 
+    // Check if only one gender is selected
+    const onlyOneGenderSelected =
+      newGenderState.filter((g) => g.checked).length === 1 &&
+      newCategoryState.every((c) => !c.checked);
+    // Check if only one category is selected
+    const onlyOneCategorySelected =
+      newCategoryState.filter((c) => c.checked).length === 1 &&
+      newGenderState.every((g) => !g.checked);
+
+    if (onlyOneGenderSelected) {
+      // Automatically select all categories
+      newCategoryState = newCategoryState.map((c) => ({ ...c, checked: true }));
+    } else if (onlyOneCategorySelected) {
+      // Automatically select all genders
+      newGenderState = newGenderState.map((g) => ({ ...g, checked: true }));
+    }
+
+    const newFiltersState = {
+      category: newCategoryState,
+      gender: newGenderState,
+    };
+
+    // Update the state with the new filters
+    setFilters(newFiltersState);
+
+    // Update filtered products using the new filters state
     const filtered = pros.filter((product) => {
-      const categoryMatch = selectedCategoryFilters.includes(product.category);
-      const genderMatch = selectedGenderFilters.includes(product.gender);
+      const categoryMatch = newCategoryState.some(
+        (c) => c.checked && c.value === product.category
+      );
+      const genderMatch = newGenderState.some(
+        (g) => g.checked && g.value === product.gender
+      );
 
       return categoryMatch && genderMatch;
     });
@@ -112,6 +179,56 @@ export default function Sidebar() {
     setFilteredProducts(filtered);
   };
 
+  if (f === "true") {
+    useEffect(() => {
+      console.log("did this run");
+
+      let newCategoryState = filters.category.slice();
+      let newGenderState = filters.gender.slice();
+
+      // Check if only one gender is selected
+      const onlyOneGenderSelected =
+        newGenderState.filter((g) => g.checked).length === 1 &&
+        newCategoryState.every((c) => !c.checked);
+      // Check if only one category is selected
+      const onlyOneCategorySelected =
+        newCategoryState.filter((c) => c.checked).length === 1 &&
+        newGenderState.every((g) => !g.checked);
+
+      if (onlyOneGenderSelected) {
+        // Automatically select all categories
+        newCategoryState = newCategoryState.map((c) => ({
+          ...c,
+          checked: true,
+        }));
+      } else if (onlyOneCategorySelected) {
+        // Automatically select all genders
+        newGenderState = newGenderState.map((g) => ({ ...g, checked: true }));
+      }
+
+      const newFiltersState = {
+        category: newCategoryState,
+        gender: newGenderState,
+      };
+
+      // Update the state with the new filters
+      setFilters(newFiltersState);
+
+      // Update filtered products using the new filters state
+      const filtered = pros.filter((product) => {
+        const categoryMatch = newCategoryState.some(
+          (c) => c.checked && c.value === product.category
+        );
+        const genderMatch = newGenderState.some(
+          (g) => g.checked && g.value === product.gender
+        );
+
+        return categoryMatch && genderMatch;
+      });
+
+      setFilteredProducts(filtered);
+    }, [pros]);
+  }
   const handleClearFilters = () => {
     setFilters(initialState);
     setFilteredProducts(pros);
@@ -247,8 +364,8 @@ export default function Sidebar() {
 
                   {/* Filters */}
                   <form className="mt-4 border-t border-gray-200">
-                    {/* <h3 className="sr-only">Categories</h3> */}
-                    {/* <ul
+                    {/* <h3 className="sr-only">Brands</h3>
+                    <ul
                       role="list"
                       className="px-2 py-3 font-medium text-gray-900"
                     >
@@ -307,7 +424,7 @@ export default function Sidebar() {
                                           optionIdx
                                         )
                                       }
-                                      className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                      className="h-4 w-4 rounded border-gray-300 text-rose-600 focus:ring-rose-500"
                                     />
                                     <label
                                       htmlFor={`filter-${sectionId}-${optionIdx}`}
@@ -325,7 +442,7 @@ export default function Sidebar() {
                     ))}
                     <button
                       type="button"
-                      className="mt-4 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded"
+                      className="mt-4 bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-4 rounded"
                       onClick={handleFilterButtonClick}
                     >
                       Filter
@@ -333,7 +450,7 @@ export default function Sidebar() {
 
                     <button
                       type="button"
-                      className="mt-4 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded"
+                      className="mt-4 bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-4 rounded"
                       onClick={handleClearFilters}
                     >
                       Clear All filters
@@ -348,7 +465,7 @@ export default function Sidebar() {
         <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-baseline justify-between border-b border-gray-200 pb-6 pt-10">
             <h1 className="text-4xl font-bold tracking-tight text-gray-900">
-              Discover
+              Discover:
             </h1>
 
             <div className="flex items-center">
@@ -397,7 +514,44 @@ export default function Sidebar() {
                   </Menu.Items>
                 </Transition>
               </Menu>
-
+              <div>
+                <div className="input ml-5 flex justify-center">
+                  <input
+                    type="text"
+                    placeholder="Search here"
+                    onChange={(e) => setSearch(e.target.value)}
+                    className=" bg-gray-200 placeholder-gray-400 rounded-lg px-2 py-2 w-96 lg:w-96 md:w-96 outline-none text-black "
+                  />
+                </div>
+                <div className="ml-5 flex justify-center">
+                  {search && (
+                    <div className="block absolute bg-gray-200 w-96 md:w-96 lg:w-96 z-50 my-1 rounded-lg px-2 py-2">
+                      {filterSearchData.length > 0 ? (
+                        <>
+                          {filterSearchData.map((item, index) => {
+                            return (
+                              <a
+                                key={index}
+                                className="py-2 px-2 cursor-pointer"
+                                href={`/product/${item.id}`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <img className="w-10" src={item.img} alt="" />
+                                  {item.title}
+                                </div>
+                              </a>
+                            );
+                          })}
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex justify-center"></div>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
               <button
                 type="button"
                 className="-m-2 ml-4 p-2 text-gray-400 hover:text-gray-500 sm:ml-6 lg:hidden"
@@ -417,7 +571,7 @@ export default function Sidebar() {
             <div className="grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-4">
               {/* Filters */}
               <form className="hidden lg:block">
-                {/* <h3 className="sr-only">Categories</h3>
+                {/* <h3 className="sr-only">Brands</h3>
                 <ul
                   role="list"
                   className="space-y-4 border-b border-gray-200 pb-6 text-sm font-medium text-gray-900"
@@ -473,7 +627,7 @@ export default function Sidebar() {
                                   onChange={() =>
                                     handleCheckboxChange(sectionId, optionIdx)
                                   }
-                                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                  className="h-4 w-4 rounded border-gray-300 text-rose-600 focus:ring-rose-500"
                                 />
                                 <label
                                   htmlFor={`filter-${sectionId}-${optionIdx}`}
@@ -492,7 +646,7 @@ export default function Sidebar() {
 
                 <button
                   type="button"
-                  className="mt-4 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded"
+                  className="mt-4 bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 px-4 rounded"
                   onClick={handleFilterButtonClick}
                 >
                   Filter
@@ -521,7 +675,7 @@ export default function Sidebar() {
                             <h6 className="font-medium text-xl leading-8 text-black mb-2">
                               {product.title}
                             </h6>
-                            <h6 className="font-semibold text-xl leading-8 text-indigo-600">
+                            <h6 className="font-semibold text-xl leading-8 text-rose-600">
                               ₹ {product.price}
                             </h6>
                           </div>
@@ -531,7 +685,7 @@ export default function Sidebar() {
                                 e.preventDefault();
                                 deleteCart(product);
                               }}
-                              className="p-2 min-[400px]:p-4 rounded-full bg-indigo-600 border border-gray-300 flex items-center justify-center group shadow-sm shadow-transparent transition-all duration-500 hover:shadow-gray-200 hover:border-gray-400 hover:bg-gray-50"
+                              className="p-2 min-[400px]:p-4 rounded-full bg-rose-600 border border-gray-300 flex items-center justify-center group shadow-sm shadow-transparent transition-all duration-500 hover:shadow-gray-200 hover:border-gray-400 hover:bg-gray-50"
                             >
                               <svg
                                 className="stroke-white transition-all duration-500 group-hover:stroke-black"
