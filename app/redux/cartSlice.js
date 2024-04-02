@@ -1,11 +1,20 @@
-"use client";
 import { createSlice } from "@reduxjs/toolkit";
 
-const initialState = JSON.parse(localStorage.getItem("cart")) ?? [];
-console.log(initialState);
+// Check if window object is defined (indicating browser environment)
+const isBrowser = typeof window !== "undefined";
+
+// Define initial state function to retrieve from localStorage
+const getInitialState = () => {
+  if (isBrowser) {
+    return JSON.parse(localStorage.getItem("cart")) ?? [];
+  } else {
+    return [];
+  }
+};
+
 export const cartSlice = createSlice({
   name: "cart",
-  initialState,
+  initialState: getInitialState(),
   reducers: {
     addToCart(state, action) {
       state.push(action.payload);

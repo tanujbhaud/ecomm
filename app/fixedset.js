@@ -18,3 +18,4 @@ export default function Fixedset({ children }) {
     </>
   );
 }
+``;

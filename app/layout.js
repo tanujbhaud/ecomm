@@ -1,7 +1,7 @@
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 export const metadata = {
-  title: "E-commerce",
+  title: "Fashion Fusion",
   description: "",
 };
 import Fixedset from "./fixedset";

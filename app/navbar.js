@@ -8,10 +8,8 @@ import { IoIosClose } from "react-icons/io";
 import { Dialog, Popover, Tab, Transition } from "@headlessui/react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { FaBars, FaSearch } from "react-icons/fa";
-
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
-
 const navigation = {
   categories: [
     {
@@ -131,6 +129,7 @@ function classNames(...classes) {
 
 export default function Navbar({ ocart, setocart }) {
   const cartItems = useSelector((state) => state.cart);
+
   const [user] = useAuthState(auth);
   const [username, setusername] = useState("");
   const Router = useRouter();

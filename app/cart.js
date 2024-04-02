@@ -9,8 +9,7 @@ import {
   incrementQuantity,
 } from "./redux/cartSlice";
 import toast from "react-hot-toast";
-import { Timestamp, addDoc, collection } from "firebase/firestore";
-import { db } from "./config/firebase";
+
 import { IoIosClose } from "react-icons/io";
 // const products = [
 //   {
@@ -43,6 +42,7 @@ import { IoIosClose } from "react-icons/io";
 export default function Cart({ open, setOpen }) {
   const [tot, settot] = useState(0);
   const cartItems = useSelector((state) => state.cart);
+
   const dispatch = useDispatch();
 
   const deleteCart = (item) => {
@@ -67,23 +67,6 @@ export default function Cart({ open, setOpen }) {
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cartItems));
   }, [cartItems]);
-
-  // user
-  const user = JSON.parse(localStorage.getItem("users"));
-
-  // Buy Now Function
-  const [addressInfo, setAddressInfo] = useState({
-    name: "",
-    address: "",
-    pincode: "",
-    mobileNumber: "",
-    time: Timestamp.now(),
-    date: new Date().toLocaleString("en-US", {
-      month: "short",
-      day: "2-digit",
-      year: "numeric",
-    }),
-  });
 
   return (
     <Transition.Root show={open} as={Fragment}>
