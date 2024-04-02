@@ -179,8 +179,8 @@ export default function Sidebar() {
     setFilteredProducts(filtered);
   };
 
-  if (f === "true") {
-    useEffect(() => {
+  useEffect(() => {
+    if (f === "true") {
       console.log("did this run");
 
       let newCategoryState = filters.category.slice();
@@ -227,10 +227,25 @@ export default function Sidebar() {
       });
 
       setFilteredProducts(filtered);
-    }, [pros]);
-  }
+    }
+  }, [pros]);
+
   const handleClearFilters = () => {
-    setFilters(initialState);
+    setFilters({
+      category: [
+        { value: "top", label: "Tops", checked: false },
+        { value: "pant", label: "Pants", checked: false },
+        { value: "sg", label: "Sunglasses", checked: false },
+        { value: "bag", label: "Bags", checked: false },
+        { value: "hat", label: "Hats", checked: false },
+        { value: "watch", label: "Watches", checked: false },
+      ],
+      gender: [
+        { value: "m", label: "Men", checked: false },
+        { value: "f", label: "Women", checked: false },
+        { value: "b", label: "Unisex", checked: false },
+      ],
+    });
     setFilteredProducts(pros);
   };
 
@@ -650,6 +665,14 @@ export default function Sidebar() {
                   onClick={handleFilterButtonClick}
                 >
                   Filter
+                </button>
+
+                <button
+                  type="button"
+                  className="mt-4 bg-rose-500 hover:bg-rose-600 text-white font-bold py-2 ml-4 px-4 rounded"
+                  onClick={handleClearFilters}
+                >
+                  Clear All filters
                 </button>
               </form>
 
