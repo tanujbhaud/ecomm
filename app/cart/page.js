@@ -118,6 +118,7 @@ export default function CartPage() {
         });
         dispatch(emptyCart());
         toast.success("Order Placed Successfully");
+        router.push("/dashboard");
       } else {
         setOpen(true);
       }
