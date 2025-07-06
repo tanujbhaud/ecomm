@@ -20,17 +20,15 @@ const navigation = {
           name: "New Arrivals",
           href: "/discover?arr=true&gen=f&f=true",
           imageSrc:
-            "https://tailwindui.com/img/ecommerce-images/mega-menu-category-01.jpg",
-          imageAlt:
-            "Models sitting back to back, wearing Basic Tee in black and bone.",
+            "https://images.unsplash.com/photo-1551232864-3f0890e580d9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80",
+          imageAlt: "Female model wearing new summer dress collection",
         },
         {
           name: "Basic Tees",
           href: "/discover?cat=top&gen=f&f=true",
           imageSrc:
-            "https://tailwindui.com/img/ecommerce-images/mega-menu-category-02.jpg",
-          imageAlt:
-            "Close up of Basic Tee fall bundle with off-white, ochre, olive, and black tees.",
+            "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80",
+          imageAlt: "Stack of women's basic t-shirts in summer colors",
         },
       ],
       sections: [
@@ -72,17 +70,15 @@ const navigation = {
           name: "New Arrivals",
           href: "/discover?arr=true&gen=m&f=true",
           imageSrc:
-            "https://tailwindui.com/img/ecommerce-images/product-page-04-detail-product-shot-01.jpg",
-          imageAlt:
-            "Drawstring top with elastic loop closure and textured interior padding.",
+            "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80",
+          imageAlt: "Male model wearing new summer linen shirt",
         },
         {
           name: "Artwork Tees",
           href: "/discover?cat=top&gen=m&f=true",
           imageSrc:
-            "https://tailwindui.com/img/ecommerce-images/category-page-02-image-card-06.jpg",
-          imageAlt:
-            "Three shirts in gray, white, and blue arranged on table with same line drawing of hands and shapes overlapping on front of shirt.",
+            "https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80",
+          imageAlt: "Collection of men's graphic tees with artwork designs",
         },
       ],
       sections: [
@@ -122,7 +118,6 @@ const navigation = {
   ],
   pages: [{ name: "Discover", href: "/discover" }],
 };
-
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
